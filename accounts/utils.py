@@ -11,8 +11,14 @@ from e_commerce.constants import(
     ENCODE,
     DECODE,
 )
-from accounts.models import User
+from accounts.models import Myuser
 from django.urls import resolve
+from django.db.models import DateTimeField
+
+
+class DateTimeWithoutTZField(DateTimeField):
+    def db_type(self, connection):
+        return 'timestamptz'
 
 
 def get_current_timestamp_of_timezone(time_zone):
@@ -21,8 +27,8 @@ def get_current_timestamp_of_timezone(time_zone):
     return round(datetime.now(timezone).timestamp())
 
 
-def hash_given_password(username, password):
-    password_hash_key = username+password
+def hash_given_password(password):
+    password_hash_key = password
     output = hashlib.md5(password_hash_key.encode()).hexdigest()
     return output
 
@@ -37,7 +43,7 @@ def get_redis_datas(key, fields):
     return dict()
 
 def user_key_redis(data):
-    redis_key = data['username'] + '_' + str(data['id'])
+    redis_key = data['username'] + '_' + str(data['user_id'])
     return redis_key
 
 
@@ -60,7 +66,7 @@ def encode_decode_jwt_token(data_to_convert, convertion_type):
 def validate_jwt_token(token):
     try:
         user_details = encode_decode_jwt_token(token, convertion_type=DECODE)
-        user_query = User.objects.filter(id = user_details['id'])
+        user_query = Myuser.objects.filter(user_id = user_details['id'])
         token_status = True if user_query else False
         return token_status
     except Exception as error:
@@ -74,3 +80,8 @@ def is_api_open(request):
             return True
     except:
         return False
+    
+
+def check_feature_permission(token):
+    token_data = encode_decode_jwt_token(token, convertion_type=DECODE)
+    return True if token_data['is_superuser'] else False
