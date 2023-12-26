@@ -13,7 +13,7 @@ from accounts.utils import(
     encode_decode_jwt_token,
     get_current_timestamp_of_timezone,
 )
-from shopping.models import Product, Order, OrderItem
+from shopping.models import Product, Order
 from e_commerce.constants import (
     ENCODE,
     DECODE,
@@ -33,13 +33,13 @@ from e_commerce.constants import (
     USER_DOSENT_EXISTS,
 )
 from e_commerce.settings import TIME_ZONE
-from accounts.models import User
-from shopping.serializers import ProductSerializer, OrderSerializer, OrderItemSerializer
+from accounts.models import Myuser
+from shopping.serializers import ProductSerializer, OrderSerializer
 from rest_framework.generics import ListCreateAPIView
 
 
 class ListCreateProducts(ListCreateAPIView):
-    queryset = Product.objects.all().order_by('-date_created')
+    queryset = Product.objects.all().order_by('-created_at')
     serializer_class = ProductSerializer
 
     def get(self, request):
@@ -74,7 +74,7 @@ class ListCreateProducts(ListCreateAPIView):
 
 
 class RetrieveUpdateDeleteProducts(APIView):
-    queryset = Product.objects.all().order_by('-date_created')
+    queryset = Product.objects.all().order_by('-created_at')
     serializer_class = ProductSerializer
 
     def get(self, request, **kwargs):
@@ -170,12 +170,12 @@ class ListCreateOrders(ListCreateAPIView):
                     'product_id': request.data['product_id'],
                     'quantity': request.data['quantity']
                 }
-                orderitem_serializer = OrderItemSerializer(data = orderitems_data, context = {'request':request})
-                if orderitem_serializer.is_valid():
-                    orderitem_serializer.save()
-                    response = {"status": HTTP_201_CREATED, "message": ORDER_ADDED_SUCCESSFULLY, "data": order_serializer.data}
-                else:
-                    response = {"status": HTTP_400_BAD_REQUEST, "error": order_serializer.errors, "data": None}
+                # orderitem_serializer = OrderItemSerializer(data = orderitems_data, context = {'request':request})
+                # if orderitem_serializer.is_valid():
+                #     orderitem_serializer.save()
+                #     response = {"status": HTTP_201_CREATED, "message": ORDER_ADDED_SUCCESSFULLY, "data": order_serializer.data}
+                # else:
+                response = {"status": HTTP_400_BAD_REQUEST, "error": order_serializer.errors, "data": None}
             else:
                 response = {"status": HTTP_400_BAD_REQUEST, "error": order_serializer.errors, "data": None}
                 
@@ -217,7 +217,8 @@ class RetrieveUpdateDeleteOrders(APIView):
                 if serializer.is_valid():
                     serializer.save()
                     if request.data.get('quantity'):
-                        OrderItem.objects.filter(order_id=kwargs['order_id']).update(quantity  = request.data['quantity'])
+                        # OrderItem.objects.filter(order_id=kwargs['order_id']).update(quantity  = request.data['quantity'])
+                        pass
                     response = {"status": HTTP_201_CREATED, "message": ORDER_UPDATED_SUCCESSFULLY, "data": serializer.data}
                 else:
                     response = {"status": HTTP_400_BAD_REQUEST, "error": serializer.errors, "data": None}
