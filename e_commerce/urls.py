@@ -15,10 +15,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from accounts.views import (
     LoginView,
     ListCreateDeleteUser,
+    RetrieveUpdateDeleteUser,
 )
 from shopping.views import (
     ListCreateProducts,
@@ -30,10 +31,10 @@ from shopping.views import (
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/login/', LoginView.as_view(), name='login'),
-    path('api/register/', ListCreateDeleteUser.as_view(), name='account-register'),
-    path('api/delete/user/<int:user_id>/', ListCreateDeleteUser.as_view()),
+    path('api/account/', ListCreateDeleteUser.as_view(), name='account-register'),
+    path('api/account/<uuid:user_id>/', RetrieveUpdateDeleteUser.as_view()),
     path('api/products/', ListCreateProducts.as_view()),
-    path('api/products/<int:product_id>/', RetrieveUpdateDeleteProducts.as_view()),
+    path('api/products/<uuid:product_id>/', RetrieveUpdateDeleteProducts.as_view()),
     path('api/orders/', ListCreateOrders.as_view()),
-    path('api/orders/<int:order_id>/', RetrieveUpdateDeleteOrders.as_view()),
+    path('api/orders/<uuid:order_id>/', RetrieveUpdateDeleteOrders.as_view()),
 ]
