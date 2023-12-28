@@ -44,11 +44,16 @@ from django.contrib.auth import authenticate
 class LoginView(APIView):
     def post(self, request):
         try:
-            user_query = Myuser.objects.filter(username = request.data['username'])
-            if not user_query.exists():
+            userExist = Myuser.objects.filter(username = request.data['username'])
+            emailExist = Myuser.objects.filter(email = request.data['username'])
+            
+            if userExist.exists():
+                user_object = userExist.get()
+            elif emailExist.exists():
+                user_object = emailExist.get()
+            else:
                 return Response({"status": HTTP_404_NOT_FOUND, "message": USER_DOSENT_EXISTS, "data": []})
-        
-            user_object = user_query.get(username = request.data['username'])
+            
             user_data = UserSerializer(user_object).data
             redis_user_key = user_key_redis(user_data)
             test = get_redis_datas(redis_user_key, ['user_id', 'username', 'password', 'email'])
