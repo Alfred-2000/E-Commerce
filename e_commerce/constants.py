@@ -1,5 +1,5 @@
 
-DELIMITER = "::_____________"
+LOG_LINES = "::_____________"
 
 ENCODE = 'encode'
 
@@ -72,7 +72,7 @@ admin_user_details = {
     "password": 'Ecommerce@!123',
     "email": 'eadmin@gmail.com',
     "phone_code": '+91',
-    "phone_number": '9098909876',
+    "phone_number": '9000000000',
     "is_superuser": True
 }
 
@@ -81,6 +81,18 @@ debug_user_details = {
     "password": 'Ecommerce@!123',
     "email": 'edebugadmin@gmail.com',
     "phone_code": '+91',
-    "phone_number": '8098909876',
+    "phone_number": '8000000000',
     "is_superuser": True
+}
+
+SMTP_HOST = 'gmail'
+SMTP_USER = 'test123@gmail.com'
+SMTP_PASSWORD = 'pkfagrthmgrinqse'
+
+system_config_details = {
+    'system_name': 'E-Commerce',
+    'smtp_enable': True,
+    'smtp_host': SMTP_HOST,
+    'smtp_username': SMTP_USER,
+    'smtp_password': SMTP_PASSWORD
 }

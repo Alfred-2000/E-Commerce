@@ -15,7 +15,7 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+    
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -36,9 +36,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'accounts',
     'shopping',
-    'rest_framework',
+    'system',
 ]
 
 MIDDLEWARE = [
@@ -64,6 +65,7 @@ OPEN_API = {
     "login": 1,
     "account-register": 1,
 }
+
 MEDIA_URL = '/media/'
 TEMPLATES = [
     {
@@ -101,7 +103,6 @@ DATABASES = {
         "PORT": 5432,
     }
 }
-
 
 LOGGING = {
     'version': 1,
@@ -172,3 +173,13 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+#Celery configurations
+BROKER_URL = "redis://{}:6379".format('127.0.0.1')
+CELERY_RESULT_BACKEND = "redis://{}:6379".format('127.0.0.1')
+CELERY_ACCEPT_CONTENT = ["application/json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_DEFAULT_WORKER = 2
+CELERYD_TASK_SOFT_TIME_LIMIT = 900
+CELERY_DEFAULT_QUEUE = "default"
