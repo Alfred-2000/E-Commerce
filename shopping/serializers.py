@@ -2,7 +2,6 @@
 import logging
 from rest_framework.serializers import ModelSerializer, ValidationError, SerializerMethodField
 from shopping.models import Product, Order
-from e_commerce.constants import DELIMITER
 from accounts.models import Myuser
 
 class ProductSerializer(ModelSerializer):

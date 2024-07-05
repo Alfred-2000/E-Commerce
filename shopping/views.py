@@ -12,6 +12,7 @@ from rest_framework.status import(
 from accounts.utils import(
     encode_decode_jwt_token,
     get_current_timestamp_of_timezone,
+    CsrfExemptSessionAuthentication,
 )
 from shopping.models import Product, Order
 from e_commerce.constants import (
@@ -37,8 +38,8 @@ from accounts.models import Myuser
 from shopping.serializers import ProductSerializer, OrderSerializer
 from rest_framework.generics import ListCreateAPIView
 
-
 class ListCreateProducts(ListCreateAPIView):
+    authentication_classes = (CsrfExemptSessionAuthentication,)
     queryset = Product.objects.all().order_by('-created_at')
     serializer_class = ProductSerializer
 
@@ -50,7 +51,6 @@ class ListCreateProducts(ListCreateAPIView):
             serializer = ProductSerializer(page, many=True, context = {'request': request})
             result = self.get_paginated_response(serializer.data)
             return result
-
 
     def post(self, request, **kwargs):
         try:
@@ -66,14 +66,13 @@ class ListCreateProducts(ListCreateAPIView):
                 response = {"status": HTTP_400_BAD_REQUEST, "error": serializer.errors, "data": None}
                 logging.info(response)
                 return Response(response)
-
         except Exception as error:
             response = {"status": HTTP_400_BAD_REQUEST, "error": error, "data": None}
             logging.info(response)
             return Response(response)
 
-
 class RetrieveUpdateDeleteProducts(APIView):
+    authentication_classes = (CsrfExemptSessionAuthentication,)
     queryset = Product.objects.all().order_by('-created_at')
     serializer_class = ProductSerializer
 
@@ -89,7 +88,6 @@ class RetrieveUpdateDeleteProducts(APIView):
             response = {"status": HTTP_400_BAD_REQUEST, "error": error, "data": None}
             logging.info(response)
             return Response(response)
-        
 
     def put(self, request, **kwargs):
         try:
@@ -132,9 +130,9 @@ class RetrieveUpdateDeleteProducts(APIView):
             response = {"status": HTTP_400_BAD_REQUEST, "error": error, "data": None}
             logging.info(response)
             return Response(response)
-        
 
 class ListCreateOrders(ListCreateAPIView):
+    authentication_classes = (CsrfExemptSessionAuthentication,)
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
 
@@ -150,7 +148,6 @@ class ListCreateOrders(ListCreateAPIView):
             serializer = OrderSerializer(page, many=True, context = {'request': request})
             result = self.get_paginated_response(serializer.data)
             return result
-
 
     def post(self, request, **kwargs):
         try:
@@ -186,9 +183,8 @@ class ListCreateOrders(ListCreateAPIView):
             logging.info(response)
             return Response(response)
 
-
-
 class RetrieveUpdateDeleteOrders(APIView):
+    authentication_classes = (CsrfExemptSessionAuthentication,)
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
 
@@ -203,7 +199,6 @@ class RetrieveUpdateDeleteOrders(APIView):
             response = {"status": HTTP_400_BAD_REQUEST, "error": error, "data": None}
             logging.info(response)
             return Response(response)
-        
 
     def put(self, request, **kwargs):
         try:
@@ -233,7 +228,6 @@ class RetrieveUpdateDeleteOrders(APIView):
             response = {"status": HTTP_400_BAD_REQUEST, "error": error, "data": None}
             logging.info(response)
             return Response(response)
-    
 
     def delete(self, request, **kwargs):
         try:
@@ -250,4 +244,3 @@ class RetrieveUpdateDeleteOrders(APIView):
             response = {"status": HTTP_400_BAD_REQUEST, "error": error, "data": None}
             logging.info(response)
             return Response(response)
-        
