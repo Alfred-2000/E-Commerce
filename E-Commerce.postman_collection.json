@@ -1,0 +1,721 @@
+{
+	"info": {
+		"_postman_id": "a3633770-ddec-430e-828d-172353db1d16",
+		"name": "E-Commerce",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "23548631"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Get the response headers",
+									"const headers = pm.response.headers;",
+									"",
+									"console.log(\"before Authorization Env :\",  pm.collectionVariables.get('authToken'));",
+									"",
+									"// Loop through the headers and print each one",
+									"headers.each((eachHeader, key) => {",
+									"    // console.log(eachHeader)",
+									"    if(eachHeader && eachHeader.key && eachHeader.key === 'Authorization') {",
+									"        console.log(eachHeader)",
+									"        pm.collectionVariables.set(\"authToken\", eachHeader.value);",
+									"    }",
+									"});",
+									"",
+									"console.log(\"after Authorization Env :\",  pm.collectionVariables.get('authToken'));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"a1user2\",\n    \"password\": \"PassWord@1\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/login/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"login",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "List users",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/account/list/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"account",
+								"list",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register user",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"first_name\": \"user1\",\n    \"last_name\": \"a1\",\n    \"username\": \"a1user2\",\n    \"password\": \"PassWord@1\",\n    \"email\": \"abc2@gmail.com\",\n    \"phone_code\": \"+91\",\n    \"phone_number\": \"9098909872\",\n    \"state\": \"Tamil Nadu\",\n    \"country\": \"India\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/account/register/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"account",
+								"register",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete users",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_ids\": [\"0d640fe0-0616-4e5a-8d4c-457c72b31504\", \"9d6f790c-23fd-478c-9f0c-439a08079f9b\", \"2d23a660-1c20-4606-bb60-dfae36328dcc\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/account/list/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"account",
+								"list",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve user details",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/account/{{user_id}}/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"account",
+								"{{user_id}}",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update user details",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"a22user\",\n    \"email\": \"a22user@gmail.com\",\n    \"phone_number\": \"+90 4098909822\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/account/{{user_id}}/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"account",
+								"{{user_id}}",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete user details",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/api/account/{{user_id}}/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"account",
+								"{{user_id}}",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verify user",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"otp\": 45649\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/account/verify/42310f50-3821-4ae3-936a-d738b2547cf9/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"account",
+								"verify",
+								"42310f50-3821-4ae3-936a-d738b2547cf9",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "Create Products",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Samsung4\",\n    \"description\": \"abc1d\",\n    \"price\": \"20008\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/products/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"products",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Products",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/api/product/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"product",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve product details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/api/product/8d2b277c-09e5-4a16-aa8a-509f5384900e/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"product",
+								"8d2b277c-09e5-4a16-aa8a-509f5384900e",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Product details",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Samsung\",\n    \"price\": \"30001\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/product/430acbfd-8317-4fe5-b6e5-77d03be6c8d4/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"product",
+								"430acbfd-8317-4fe5-b6e5-77d03be6c8d4",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Product details",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/api/account/f2733cc1-04df-458d-986f-07796959f97c/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"account",
+								"f2733cc1-04df-458d-986f-07796959f97c",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Products",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"product_ids\": [\"a17e1c2d-30c3-4f38-bd70-04895e6f201f\", \"1103019e-bede-4961-a9f2-a23987654349\", \"9789e3b0-e3bd-475e-90ea-942d5a7be721\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/product/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"product",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Orders",
+			"item": [
+				{
+					"name": "Create Order",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"product_id\" : \"3a6cf661-5625-4d37-9826-2b15dafde2c5\",\n    \"quantity\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/order/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"order",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Orders",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/order/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"order",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Order details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/api/orders/6/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"orders",
+								"6",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve order details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/api/order/57f2dec2-eb19-41de-8a9d-ee7ad26a0689/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"order",
+								"57f2dec2-eb19-41de-8a9d-ee7ad26a0689",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Order details",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": 0,\n    \"quantity\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/order/57f2dec2-eb19-41de-8a9d-ee7ad26a0689/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"order",
+								"57f2dec2-eb19-41de-8a9d-ee7ad26a0689",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Order details",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/api/order/bcf0f36b-8919-4122-933a-3470a9397007/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"order",
+								"bcf0f36b-8919-4122-933a-3470a9397007",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "http://127.0.0.1:8000",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
