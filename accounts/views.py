@@ -1,8 +1,12 @@
 import pytz, uuid, logging
+from django.db.models import Q
 from datetime import datetime
 from django.shortcuts import render
 from rest_framework.views import APIView
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import(
+    ListCreateAPIView, ListAPIView,
+    CreateAPIView
+)
 from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_401_UNAUTHORIZED,
@@ -36,37 +40,30 @@ from accounts.utils import (
     user_key_redis,
     encode_decode_jwt_token,
     check_feature_permission,
+    CsrfExemptSessionAuthentication,
 )
-from django.contrib.auth.hashers import make_password
-from django.contrib.auth import authenticate
-
 
 class LoginView(APIView):
     def post(self, request):
         try:
-            userExist = Myuser.objects.filter(username = request.data['username'])
-            emailExist = Myuser.objects.filter(email = request.data['username'])
-            
+            userExist = Myuser.objects.filter(Q(username=request.data['username'])|Q(email=request.data['username']))
             if userExist.exists():
                 user_object = userExist.get()
-            elif emailExist.exists():
-                user_object = emailExist.get()
             else:
                 return Response({"status": HTTP_404_NOT_FOUND, "message": USER_DOSENT_EXISTS, "data": []})
-            
             user_data = UserSerializer(user_object).data
             redis_user_key = user_key_redis(user_data)
-            test = get_redis_datas(redis_user_key, ['user_id', 'username', 'password', 'email'])
-            admin_token_details = {
-                'id' : test.get('user_id'),
-                'username': request.data['username'],
-                'email': test.get('email'),
-                'is_superuser': user_data['is_superuser']
-            }
-            access_token = encode_decode_jwt_token(admin_token_details, convertion_type=ENCODE)
+            redis_user_data = get_redis_datas(redis_user_key, ['user_id', 'username', 'password', 'email'])
+            user_details = redis_user_data if redis_user_data.get('username') else user_data
             request_password = hash_given_password(request.data["password"])
-            
-            if request_password == test.get('password'):
+            if request_password == user_details.get('password'):
+                admin_token_details = {
+                    'id' : user_details.get('user_id'),
+                    'username': request.data['username'],
+                    'email': user_details.get('email'),
+                    'is_superuser': user_data['is_superuser']
+                }
+                access_token = encode_decode_jwt_token(admin_token_details, convertion_type=ENCODE)
                 response = {"status": HTTP_200_OK, "message": USER_LOGGED_IN_SUCCESSFULLY, "data": []}
                 logging.info(response)
                 return Response(response, headers = {"Authorization": access_token})
@@ -79,25 +76,7 @@ class LoginView(APIView):
             logging.info(response)
             return Response(response)
 
-
-class ListCreateDeleteUser(ListCreateAPIView):
-
-    def get(self, request):
-        token = request.META.get('HTTP_AUTHORIZATION', None)
-        if not check_feature_permission(token):
-            response = {"status": HTTP_400_BAD_REQUEST, "error": UNAUTHORISED_ACCESS, "data": None}
-            logging.info(response)
-            return Response(response)
-        
-        query_dict = {}
-        queryset  = Myuser.objects.filter(**query_dict).all()
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = UserSerializer(page, many=True, context = {'request': request})
-            result = self.get_paginated_response(serializer.data)
-            return result
-        
-
+class RegisterUser(CreateAPIView):        
     def post(self, request):
         try:
             current_time = get_current_timestamp_of_timezone(TIME_ZONE)
@@ -125,7 +104,23 @@ class ListCreateDeleteUser(ListCreateAPIView):
             logging.info(response)
             return Response(response)
 
+class ListDeleteUsers(ListCreateAPIView):
+    authentication_classes = (CsrfExemptSessionAuthentication,)
 
+    def get(self, request):
+        token = request.META.get('HTTP_AUTHORIZATION', None)
+        if not check_feature_permission(token):
+            response = {"status": HTTP_400_BAD_REQUEST, "error": UNAUTHORISED_ACCESS, "data": None}
+            logging.info(response)
+            return Response(response)        
+        query_dict = {}
+        queryset  = Myuser.objects.filter(**query_dict).all()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = UserSerializer(page, many=True, context = {'request': request})
+            result = self.get_paginated_response(serializer.data)
+            return result
+    
     def delete(self, request):
         try:
             token = request.META.get('HTTP_AUTHORIZATION', None)
@@ -150,8 +145,8 @@ class ListCreateDeleteUser(ListCreateAPIView):
             logging.info(response)
             return Response(response)
 
-
 class RetrieveUpdateDeleteUser(ListCreateAPIView):
+    authentication_classes = (CsrfExemptSessionAuthentication,)
 
     def get(self, request, **kwargs):
         try:
@@ -161,13 +156,11 @@ class RetrieveUpdateDeleteUser(ListCreateAPIView):
             user_data = UserSerializer(user_object).data
             response = {"status": HTTP_200_OK, "message": ACCOUNT_RETRIEVED_SUCCESSFULLY, "data": user_data}
             logging.info(response)
-            return Response(response)
-        
+            return Response(response)        
         except Exception as error:
             response = {"status": HTTP_400_BAD_REQUEST, "error": error, "data": None}
             logging.info(response)
             return Response(response)
-
 
     def patch(self, request, **kwargs):
         try:
@@ -182,15 +175,12 @@ class RetrieveUpdateDeleteUser(ListCreateAPIView):
                 response = {"status": HTTP_200_OK, "message": USER_UPDATED_SUCCESSFULLY, "data": serializer.data}
             else:
                 response = {"status": HTTP_400_BAD_REQUEST, "error": serializer.errors, "data": None}
-            
             logging.info(response)
             return Response(response)
-
         except Exception as error:
             response = {"status": HTTP_400_BAD_REQUEST, "error": error, "data": None}
             logging.info(response)
             return Response(response)
-
 
     def delete(self, request, **kwargs):
         try:
@@ -204,7 +194,6 @@ class RetrieveUpdateDeleteUser(ListCreateAPIView):
             response = {"status": HTTP_200_OK, "message": USER_DELETED_SUCCESSFULLY, "data": None}
             logging.info(response)
             return Response(response)
-
         except Exception as error:
             response = {"status": HTTP_400_BAD_REQUEST, "error": error, "data": None}
             logging.info(response)
