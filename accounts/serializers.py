@@ -1,4 +1,3 @@
-
 import logging
 from django.db.models import Q
 from rest_framework.serializers import ModelSerializer, ValidationError
@@ -9,9 +8,10 @@ from e_commerce.constants import (
     USERNAME_ALREADY_EXISTS,
 )
 
+
 class UserSerializer(ModelSerializer):
     def __init__(self, *args, **kwargs):
-        remove_fields = kwargs.pop('remove_fields', None)
+        remove_fields = kwargs.pop("remove_fields", None)
         super(UserSerializer, self).__init__(*args, **kwargs)
         if remove_fields:
             for field_name in remove_fields:
@@ -19,4 +19,4 @@ class UserSerializer(ModelSerializer):
 
     class Meta:
         model = MyUser
-        fields = '__all__'
+        fields = "__all__"

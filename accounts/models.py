@@ -4,6 +4,7 @@ from datetime import datetime
 from django.contrib.auth.models import AbstractUser
 from system.utils import DateTimeWithTZField
 
+
 class MyUser(AbstractUser):
     user_id = models.UUIDField(primary_key=True, default=uuid.uuid4())
     phone_code = models.CharField(max_length=6, null=True, blank=True)

@@ -1,21 +1,23 @@
-
 import logging
-from rest_framework.serializers import ModelSerializer, ValidationError, SerializerMethodField
+from rest_framework.serializers import (
+    ModelSerializer,
+    ValidationError,
+    SerializerMethodField,
+)
 from shopping.models import Product, Order
 from accounts.models import MyUser
 
-class ProductSerializer(ModelSerializer):
 
+class ProductSerializer(ModelSerializer):
     class Meta:
         model = Product
-        fields = '__all__'
+        fields = "__all__"
 
 
-class OrderSerializer(ModelSerializer):    
-
+class OrderSerializer(ModelSerializer):
     class Meta:
         model = Order
-        fields = '__all__'
+        fields = "__all__"
 
     def to_representation(self, instance):
         representation = super(OrderSerializer, self).to_representation(instance)
@@ -30,5 +32,3 @@ class OrderSerializer(ModelSerializer):
         #     representation['price'] = orderitem_query_object.product_id.price
         #     representation['date_placed'] = instance.date_placed
         return representation
-    
-

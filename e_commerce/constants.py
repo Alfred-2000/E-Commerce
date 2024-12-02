@@ -1,9 +1,8 @@
-
 LOG_LINES = "::_____________"
 
-ENCODE = 'encode'
+ENCODE = "encode"
 
-DECODE = 'decode'
+DECODE = "decode"
 
 JWT_SECRECT_KEY = "A@!b$#cd&10"
 
@@ -68,35 +67,35 @@ ORDER_STATUS = {
     3: "Order reached to final destination",
     4: "Out for delivery",
     5: "Order Deliverd",
-    6: "Order Cancelled"
+    6: "Order Cancelled",
 }
 
 admin_user_details = {
-    "username": 'Super-Admin',
-    "password": 'Ecommerce@!123',
-    "email": 'eadmin@gmail.com',
-    "phone_code": '+91',
-    "phone_number": '9000000000',
-    "is_superuser": True
+    "username": "Super-Admin",
+    "password": "Ecommerce@!123",
+    "email": "eadmin@gmail.com",
+    "phone_code": "+91",
+    "phone_number": "9000000000",
+    "is_superuser": True,
 }
 
 debug_user_details = {
-    "username": 'Debug-Admin',
-    "password": 'Ecommerce@!123',
-    "email": 'edebugadmin@gmail.com',
-    "phone_code": '+91',
-    "phone_number": '8000000000',
-    "is_superuser": True
+    "username": "Debug-Admin",
+    "password": "Ecommerce@!123",
+    "email": "edebugadmin@gmail.com",
+    "phone_code": "+91",
+    "phone_number": "8000000000",
+    "is_superuser": True,
 }
 
-SMTP_HOST = 'gmail'
-SMTP_USER = 'test123@gmail.com'
-SMTP_PASSWORD = 'pkfagrthmgrinqse'
+SMTP_HOST = "gmail"
+SMTP_USER = "test123@gmail.com"
+SMTP_PASSWORD = "pkfagrthmgrinqse"
 
 system_config_details = {
-    'system_name': 'E-Commerce',
-    'smtp_enable': True,
-    'smtp_host': SMTP_HOST,
-    'smtp_username': SMTP_USER,
-    'smtp_password': SMTP_PASSWORD
+    "system_name": "E-Commerce",
+    "smtp_enable": True,
+    "smtp_host": SMTP_HOST,
+    "smtp_username": SMTP_USER,
+    "smtp_password": SMTP_PASSWORD,
 }

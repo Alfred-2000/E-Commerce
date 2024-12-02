@@ -3,6 +3,7 @@ from datetime import datetime
 from django.db import models
 from system.utils import DateTimeWithTZField
 
+
 class SystemConfig(models.Model):
     system_id = models.UUIDField(default=uuid.uuid4(), primary_key=True)
     system_name = models.CharField(max_length=150)

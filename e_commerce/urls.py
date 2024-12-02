@@ -23,15 +23,15 @@ from shopping.views import (
     ListCreateProducts,
     RetrieveUpdateDeleteProducts,
     ListCreateOrders,
-    RetrieveUpdateDeleteOrders
+    RetrieveUpdateDeleteOrders,
 )
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/login/', LoginView.as_view(), name='login'),
-    path('api/account/', include("accounts.urls")),
-    path('api/products/', ListCreateProducts.as_view()),
-    path('api/products/<uuid:product_id>/', RetrieveUpdateDeleteProducts.as_view()),
-    path('api/orders/', ListCreateOrders.as_view()),
-    path('api/orders/<uuid:order_id>/', RetrieveUpdateDeleteOrders.as_view()),
+    path("admin/", admin.site.urls),
+    path("api/login/", LoginView.as_view(), name="login"),
+    path("api/account/", include("accounts.urls")),
+    path("api/products/", ListCreateProducts.as_view()),
+    path("api/products/<uuid:product_id>/", RetrieveUpdateDeleteProducts.as_view()),
+    path("api/orders/", ListCreateOrders.as_view()),
+    path("api/orders/<uuid:order_id>/", RetrieveUpdateDeleteOrders.as_view()),
 ]
