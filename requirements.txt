@@ -1,4 +1,6 @@
 Django==3.1.4
+django-guardian==2.4.0
+djangorestframework-guardian==0.3.0
 djangorestframework==3.12.2
 psycopg2-binary==2.9.7
 redis==3.5.0

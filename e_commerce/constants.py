@@ -37,6 +37,8 @@ PRODUCT_DETAILS_LISTED_SUCCESSFULLY = "Product details listed successfully"
 
 PRODUCT_ADDED_SUCCESSFULLY = "Product added successfully"
 
+PRODUCT_ALREADY_EXISTS = "Product already exists"
+
 PRODUCT_UPDATED_SUCCESSFULLY = "Product updated successfully"
 
 PRODUCT_DELETED_SUCCESSFULLY = "Product deleted successfully"
@@ -56,6 +58,8 @@ ORDER_DELETED_SUCCESSFULLY = "Order deleted successfully"
 ORDERS_LISTED_SUCCESSFULLY = "Order listed successfully"
 
 ORDER_DOESNT_EXISTS = "Order does not exists"
+
+SYSTEM_CONFIG_SUCCESS = "System config created successfully !!!"
 
 ORDER_STATUS = {
     0: "Order Placed",

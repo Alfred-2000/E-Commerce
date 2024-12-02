@@ -16,10 +16,10 @@ from accounts.utils import(
 )
 from shopping.models import Product, Order
 from e_commerce.constants import (
-    ENCODE,
     DECODE,
     ORDER_STATUS,
     PRODUCT_ADDED_SUCCESSFULLY,
+    PRODUCT_ALREADY_EXISTS,
     PRODUCTS_LISTED_SUCCESSFULLY,
     PRODUCT_DELETED_SUCCESSFULLY,
     PRODUCT_DETAILS_LISTED_SUCCESSFULLY,
@@ -31,10 +31,9 @@ from e_commerce.constants import (
     ORDER_DOESNT_EXISTS,
     ORDER_UPDATED_SUCCESSFULLY,
     ORDERS_LISTED_SUCCESSFULLY,
-    USER_DOSENT_EXISTS,
 )
 from e_commerce.settings import TIME_ZONE
-from accounts.models import Myuser
+from accounts.models import MyUser
 from shopping.serializers import ProductSerializer, OrderSerializer
 from rest_framework.generics import ListCreateAPIView
 
@@ -54,20 +53,25 @@ class ListCreateProducts(ListCreateAPIView):
 
     def post(self, request, **kwargs):
         try:
+            if Product.objects.filter(name=request.data['name']).exists():
+                response = {"status": HTTP_400_BAD_REQUEST, "message": PRODUCT_ALREADY_EXISTS}
+                logging.info(response)
+                return Response(response)
+            
             current_time = get_current_timestamp_of_timezone(TIME_ZONE)
-            request.data['date_created'] = datetime.fromtimestamp(current_time, pytz.timezone(TIME_ZONE)).strftime("%Y-%m-%d %H:%M:%S")
+            request.data['created_at'] = datetime.fromtimestamp(current_time, pytz.timezone(TIME_ZONE)).strftime("%Y-%m-%d %H:%M:%S")
             serializer = ProductSerializer(data = request.data, context = {'request': request})
             if serializer.is_valid():
                 serializer.save()
-                response = {"status": HTTP_201_CREATED, "message": PRODUCT_ADDED_SUCCESSFULLY, "data": serializer.data}
+                response = {"status": HTTP_201_CREATED, "message": PRODUCT_ADDED_SUCCESSFULLY}
                 logging.info(response)
                 return Response(response)
             else:
-                response = {"status": HTTP_400_BAD_REQUEST, "error": serializer.errors, "data": None}
+                response = {"status": HTTP_400_BAD_REQUEST, "error": serializer.errors}
                 logging.info(response)
                 return Response(response)
         except Exception as error:
-            response = {"status": HTTP_400_BAD_REQUEST, "error": error, "data": None}
+            response = {"status": HTTP_400_BAD_REQUEST, "error": error}
             logging.info(response)
             return Response(response)
 
@@ -85,7 +89,7 @@ class RetrieveUpdateDeleteProducts(APIView):
             logging.info(response)
             return Response(response)
         except Exception as error:
-            response = {"status": HTTP_400_BAD_REQUEST, "error": error, "data": None}
+            response = {"status": HTTP_400_BAD_REQUEST, "error": error}
             logging.info(response)
             return Response(response)
 
@@ -99,18 +103,18 @@ class RetrieveUpdateDeleteProducts(APIView):
                 serializer = ProductSerializer(product_object, data=request.data, partial=True, context={'request': request})
                 if serializer.is_valid():
                     serializer.save()
-                    response = {"status": HTTP_200_OK, "message": PRODUCT_UPDATED_SUCCESSFULLY, "data": serializer.data}
+                    response = {"status": HTTP_200_OK, "message": PRODUCT_UPDATED_SUCCESSFULLY}
                 else:
-                    response = {"status": HTTP_400_BAD_REQUEST, "error": serializer.errors, "data": None}
+                    response = {"status": HTTP_400_BAD_REQUEST, "error": serializer.errors}
                 
                 logging.info(response)
                 return Response(response)
             else:
-                response = {"status": HTTP_400_BAD_REQUEST, "error": PRODUCT_DOESNT_EXISTS, "data": None}
+                response = {"status": HTTP_400_BAD_REQUEST, "error": PRODUCT_DOESNT_EXISTS}
                 logging.info(response)
                 return Response(response)
         except Exception as error:
-            response = {"status": HTTP_400_BAD_REQUEST, "error": error, "data": None}
+            response = {"status": HTTP_400_BAD_REQUEST, "error": error}
             logging.info(response)
             return Response(response)
     
@@ -120,14 +124,14 @@ class RetrieveUpdateDeleteProducts(APIView):
             product_query = Product.objects.filter(id = kwargs['product_id'])
             if product_query:
                 product_query.delete()
-                response = {"status": HTTP_200_OK, "message": PRODUCT_DELETED_SUCCESSFULLY, "data": []}
+                response = {"status": HTTP_200_OK, "message": PRODUCT_DELETED_SUCCESSFULLY}
             else:
-                response = {"status": HTTP_400_BAD_REQUEST, "error": PRODUCT_DOESNT_EXISTS, "data": None}
+                response = {"status": HTTP_400_BAD_REQUEST, "error": PRODUCT_DOESNT_EXISTS}
             
             logging.info(response)
             return Response(response)
         except Exception as error:
-            response = {"status": HTTP_400_BAD_REQUEST, "error": error, "data": None}
+            response = {"status": HTTP_400_BAD_REQUEST, "error": error}
             logging.info(response)
             return Response(response)
 
@@ -172,14 +176,14 @@ class ListCreateOrders(ListCreateAPIView):
                 #     orderitem_serializer.save()
                 #     response = {"status": HTTP_201_CREATED, "message": ORDER_ADDED_SUCCESSFULLY, "data": order_serializer.data}
                 # else:
-                response = {"status": HTTP_400_BAD_REQUEST, "error": order_serializer.errors, "data": None}
+                response = {"status": HTTP_400_BAD_REQUEST, "error": order_serializer.errors}
             else:
-                response = {"status": HTTP_400_BAD_REQUEST, "error": order_serializer.errors, "data": None}
+                response = {"status": HTTP_400_BAD_REQUEST, "error": order_serializer.errors}
                 
             logging.info(response)
             return Response(response)
         except Exception as error:
-            response = {"status": HTTP_400_BAD_REQUEST, "error": error, "data": None}
+            response = {"status": HTTP_400_BAD_REQUEST, "error": error}
             logging.info(response)
             return Response(response)
 
@@ -196,7 +200,7 @@ class RetrieveUpdateDeleteOrders(APIView):
             logging.info(response)
             return Response(response)
         except Exception as error:
-            response = {"status": HTTP_400_BAD_REQUEST, "error": error, "data": None}
+            response = {"status": HTTP_400_BAD_REQUEST, "error": error}
             logging.info(response)
             return Response(response)
 
@@ -214,18 +218,18 @@ class RetrieveUpdateDeleteOrders(APIView):
                     if request.data.get('quantity'):
                         # OrderItem.objects.filter(order_id=kwargs['order_id']).update(quantity  = request.data['quantity'])
                         pass
-                    response = {"status": HTTP_201_CREATED, "message": ORDER_UPDATED_SUCCESSFULLY, "data": serializer.data}
+                    response = {"status": HTTP_201_CREATED, "message": ORDER_UPDATED_SUCCESSFULLY}
                 else:
-                    response = {"status": HTTP_400_BAD_REQUEST, "error": serializer.errors, "data": None}
+                    response = {"status": HTTP_400_BAD_REQUEST, "error": serializer.errors}
                 
                 logging.info(response)
                 return Response(response)
             else:
-                response = {"status": HTTP_400_BAD_REQUEST, "error": ORDER_DOESNT_EXISTS, "data": None}
+                response = {"status": HTTP_400_BAD_REQUEST, "error": ORDER_DOESNT_EXISTS}
                 logging.info(response)
                 return Response(response)
         except Exception as error:
-            response = {"status": HTTP_400_BAD_REQUEST, "error": error, "data": None}
+            response = {"status": HTTP_400_BAD_REQUEST, "error": error}
             logging.info(response)
             return Response(response)
 
@@ -234,13 +238,13 @@ class RetrieveUpdateDeleteOrders(APIView):
             order_query = Order.objects.filter(id = kwargs['order_id'])
             if order_query:
                 order_query.delete()
-                response = {"status": HTTP_200_OK, "message": ORDER_DELETED_SUCCESSFULLY, "data": []}
+                response = {"status": HTTP_200_OK, "message": ORDER_DELETED_SUCCESSFULLY}
             else:
-                response = {"status": HTTP_400_BAD_REQUEST, "error": ORDER_DOESNT_EXISTS, "data": None}
+                response = {"status": HTTP_400_BAD_REQUEST, "error": ORDER_DOESNT_EXISTS}
             
             logging.info(response)
             return Response(response)
         except Exception as error:
-            response = {"status": HTTP_400_BAD_REQUEST, "error": error, "data": None}
+            response = {"status": HTTP_400_BAD_REQUEST, "error": error}
             logging.info(response)
             return Response(response)

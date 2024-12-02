@@ -11,7 +11,7 @@ from e_commerce.constants import(
     ENCODE,
     DECODE,
 )
-from accounts.models import Myuser
+from accounts.models import MyUser
 from django.urls import resolve
 from rest_framework.authentication import SessionAuthentication
 
@@ -58,7 +58,7 @@ def validate_jwt_token(token):
     try:
         user_details = encode_decode_jwt_token(token, convertion_type=DECODE)
         if user_details:
-            user_query = Myuser.objects.filter(user_id = user_details['id'])
+            user_query = MyUser.objects.filter(user_id = user_details['id'])
             token_status = True if user_query else False
             return token_status
         return False

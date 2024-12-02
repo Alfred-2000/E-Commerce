@@ -53,6 +53,10 @@ MIDDLEWARE = [
     'accounts.middleware.AuthenticationAuthorisationMiddleware',
 ]
 
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",
+    "guardian.backends.ObjectPermissionBackend",
+)
 
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
@@ -92,6 +96,8 @@ REDIS_CONNECTION_READ = redis.Redis(connection_pool=REDIS_READ)
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+
+AUTH_USER_MODEL = "accounts.MyUser"
 
 DATABASES = {
     "default": {

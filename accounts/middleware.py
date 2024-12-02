@@ -17,7 +17,7 @@ from e_commerce.constants import(
     INVALID_TOKEN,
     USER_DOSENT_EXISTS,
 )
-from accounts.models import Myuser
+from accounts.models import MyUser
 
 class AuthenticationAuthorisationMiddleware(object):
     def __init__(self, get_response):
@@ -34,7 +34,7 @@ class AuthenticationAuthorisationMiddleware(object):
                         is_valid = validate_jwt_token(token)
                         if is_valid:
                             token_data = encode_decode_jwt_token(token, convertion_type=DECODE)
-                            user_query = Myuser.objects.filter(user_id=token_data['id'])
+                            user_query = MyUser.objects.filter(user_id=token_data['id'])
                             if user_query:
                                 response = self.get_response(request)
                                 return response

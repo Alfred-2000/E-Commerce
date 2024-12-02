@@ -2,7 +2,7 @@
 import logging
 from rest_framework.serializers import ModelSerializer, ValidationError, SerializerMethodField
 from shopping.models import Product, Order
-from accounts.models import Myuser
+from accounts.models import MyUser
 
 class ProductSerializer(ModelSerializer):
 
