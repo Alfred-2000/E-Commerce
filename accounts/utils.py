@@ -29,23 +29,36 @@ def hash_given_password(password):
     return output
 
 
-def get_redis_datas(key, fields):
+def get_redis_datas(key: str, fields: list) -> dict:
+    """
+    Retrieves specific fields from a Redis hash and returns them as a dictionary.
+
+    Input:
+        key : The Redis hash key to retrieve the data from.
+        fields : A list of field names to retrieve from the Redis hash.
+
+    Output:
+        return_data: A dictionary where keys are the field names from 'fields' and values are the decoded
+              Redis values. If no data is found, an empty dictionary is returned.
+    """
+    return_data = dict()
     redis_data = REDIS_CONNECTION_READ.hmget(str(key), fields)
     if redis_data:
         redis_data = [i.decode("utf-8") if i else "" for i in redis_data]
         if redis_data:
-            return dict(zip(fields, redis_data))
+            return_data = dict(zip(fields, redis_data))
+            return return_data
         else:
             logging.error("KEY_VALUE_NOT_FOUND_IN_REDIS :" + "{}".format(key))
-    return dict()
+    return return_data
 
 
-def user_key_redis(data):
+def user_key_redis(data: dict) -> str:
     redis_key = data["username"] + "_" + str(data["user_id"])
     return redis_key
 
 
-def encode_decode_jwt_token(data_to_convert, convertion_type):
+def encode_decode_jwt_token(data_to_convert: dict, convertion_type: str) -> dict:
     if convertion_type == ENCODE:
         try:
             response = jwt.encode(
@@ -65,7 +78,7 @@ def encode_decode_jwt_token(data_to_convert, convertion_type):
     return response
 
 
-def validate_jwt_token(token):
+def validate_jwt_token(token: str) -> bool:
     try:
         user_details = encode_decode_jwt_token(token, convertion_type=DECODE)
         if user_details:
@@ -86,7 +99,7 @@ def is_api_open(request):
         return False
 
 
-def check_feature_permission(token):
+def check_feature_permission(token: str) -> bool:
     token_data = encode_decode_jwt_token(token, convertion_type=DECODE)
     return True if token_data["is_superuser"] else False
 

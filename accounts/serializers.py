@@ -1,12 +1,7 @@
-import logging
 from django.db.models import Q
-from rest_framework.serializers import ModelSerializer, ValidationError
+from rest_framework.serializers import ModelSerializer
 from accounts.models import MyUser
-from e_commerce.constants import (
-    LOG_LINES,
-    USER_ALREADY_EXISTS,
-    USERNAME_ALREADY_EXISTS,
-)
+from accounts import Constants as AccountsConstants
 
 
 class UserSerializer(ModelSerializer):
@@ -19,4 +14,4 @@ class UserSerializer(ModelSerializer):
 
     class Meta:
         model = MyUser
-        fields = "__all__"
+        fields = AccountsConstants.USERS_META_FIELDS

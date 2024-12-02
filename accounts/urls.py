@@ -7,7 +7,7 @@ from accounts.views import (
 )
 
 urlpatterns = [
-    path("list/", ListDeleteUsers.as_view()),  # List accounts
+    path("list/", ListDeleteUsers.as_view(), name="accounts_list"),  # List accounts
     path(
         "register/", RegisterUser.as_view(), name="account-register"
     ),  # Register accounts
