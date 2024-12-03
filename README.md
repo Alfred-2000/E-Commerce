@@ -2,6 +2,7 @@
 #Execute inside postgresql to create database:
 ---------------------------------------------------------------------------------
 DROP DATABASE IF EXISTS ecommerce;
+DROP USER IF EXISTS ecommerceuser;
 CREATE DATABASE ecommerce;
 CREATE USER ecommerceuser WITH PASSWORD 'password';
 ALTER ROLE ecommerceuser SET client_encoding TO 'utf8';

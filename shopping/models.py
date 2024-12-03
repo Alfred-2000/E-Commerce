@@ -1,9 +1,6 @@
-import logging
 from django.db import models
-from datetime import datetime
-from accounts.models import MyUser
-from django.dispatch import receiver
 from django.db.models.signals import post_save
+from django.dispatch import receiver
 from e_commerce.constants import ORDER_STATUS
 from system.utils import DateTimeWithTZField
 

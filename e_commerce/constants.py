@@ -4,6 +4,8 @@ ENCODE = "encode"
 
 DECODE = "decode"
 
+ALL_FIELDS = "__all__"
+
 JWT_SECRECT_KEY = "A@!b$#cd&10"
 
 USER_LOGGED_IN_SUCCESSFULLY = "User logged in successfully"

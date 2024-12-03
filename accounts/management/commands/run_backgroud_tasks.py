@@ -1,8 +1,9 @@
-import subprocess
 import logging
+import subprocess
+
 from django.core.management import BaseCommand
 from e_commerce.constants import LOG_LINES
-from e_commerce.settings import CELERY_DEFAULT_WORKER, CELERY_DEFAULT_QUEUE
+from e_commerce.settings import CELERY_DEFAULT_QUEUE, CELERY_DEFAULT_WORKER
 
 
 class Command(BaseCommand):

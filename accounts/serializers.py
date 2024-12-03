@@ -1,10 +1,10 @@
-from django.db.models import Q
-from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
+
+from accounts import constants as AccountsConstants
 from accounts.models import MyUser
-from accounts import Constants as AccountsConstants
 
 
-class UserSerializer(ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop("remove_fields", None)
         super(UserSerializer, self).__init__(*args, **kwargs)

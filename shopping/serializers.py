@@ -1,20 +1,15 @@
-import logging
-from rest_framework.serializers import (
-    ModelSerializer,
-    ValidationError,
-    SerializerMethodField,
-)
-from shopping.models import Product, Order
-from accounts.models import MyUser
+from rest_framework import serializers
+
+from shopping.models import Order, Product
 
 
-class ProductSerializer(ModelSerializer):
+class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = "__all__"
 
 
-class OrderSerializer(ModelSerializer):
+class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = "__all__"

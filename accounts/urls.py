@@ -1,17 +1,18 @@
-from django.urls import path
-from accounts.views import (
-    LoginView,
-    RegisterUser,
-    ListDeleteUsers,
-    RetrieveUpdateDeleteUser,
-)
+from django.urls import include, path, re_path
+from rest_framework import routers
+
+from accounts import views as AccountsViews
+
+router = routers.DefaultRouter()
 
 urlpatterns = [
-    path("list/", ListDeleteUsers.as_view(), name="accounts_list"),  # List accounts
-    path(
-        "register/", RegisterUser.as_view(), name="account-register"
-    ),  # Register accounts
-    path(
-        "<uuid:user_id>/", RetrieveUpdateDeleteUser.as_view()
-    ),  # Retrieve, Update, Delete account
+    re_path(r"list/", AccountsViews.ListDeleteUsers.as_view(), name="accounts_list"),
+    re_path(
+        r"register/", AccountsViews.RegisterUser.as_view(), name="account-register"
+    ),
+    re_path(
+        r"(?P<user_id>[\w-]+)/",
+        AccountsViews.RetrieveUpdateDeleteUser.as_view(),
+        name="manage_accounts",
+    ),
 ]

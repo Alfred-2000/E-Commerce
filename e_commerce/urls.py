@@ -14,24 +14,21 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from accounts.views import LoginView
 from django.contrib import admin
-from django.urls import path, include
-from accounts.views import (
-    LoginView,
-)
-from shopping.views import (
-    ListCreateProducts,
-    RetrieveUpdateDeleteProducts,
-    ListCreateOrders,
-    RetrieveUpdateDeleteOrders,
-)
+from django.urls import include, path, re_path
+from shopping.views import (ListCreateOrders, ListCreateProducts,
+                            RetrieveUpdateDeleteOrders,
+                            RetrieveUpdateDeleteProducts)
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("api/login/", LoginView.as_view(), name="login"),
-    path("api/account/", include("accounts.urls")),
-    path("api/products/", ListCreateProducts.as_view()),
-    path("api/products/<uuid:product_id>/", RetrieveUpdateDeleteProducts.as_view()),
-    path("api/orders/", ListCreateOrders.as_view()),
-    path("api/orders/<uuid:order_id>/", RetrieveUpdateDeleteOrders.as_view()),
+    re_path(r"^admin/", admin.site.urls),
+    re_path(r"^api/login/", LoginView.as_view(), name="login"),
+    re_path(r"^api/account/", include("accounts.urls")),
+    re_path(r"^api/products/", ListCreateProducts.as_view()),
+    re_path(
+        r"^api/products/(?P<product_id>[\w-]+)/", RetrieveUpdateDeleteProducts.as_view()
+    ),
+    re_path(r"^api/orders/", ListCreateOrders.as_view()),
+    re_path(r"^api/orders/(?P<order_id>[\w-]+)/", RetrieveUpdateDeleteOrders.as_view()),
 ]

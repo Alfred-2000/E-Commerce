@@ -1,51 +1,26 @@
 import logging
-import pytz
 from datetime import datetime
-from django.shortcuts import render
-from rest_framework.views import APIView
+
+import pytz
+from accounts import utils as AccountsUtils
+from e_commerce import constants as EcommerceConstants
+from e_commerce import settings as EcommerceSettings
+from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.status import (
-    HTTP_400_BAD_REQUEST,
-    HTTP_201_CREATED,
-    HTTP_200_OK,
-)
-from accounts.utils import (
-    encode_decode_jwt_token,
-    get_current_timestamp_of_timezone,
-    CsrfExemptSessionAuthentication,
-)
-from shopping.models import Product, Order
-from e_commerce.constants import (
-    DECODE,
-    ORDER_STATUS,
-    PRODUCT_ADDED_SUCCESSFULLY,
-    PRODUCT_ALREADY_EXISTS,
-    PRODUCTS_LISTED_SUCCESSFULLY,
-    PRODUCT_DELETED_SUCCESSFULLY,
-    PRODUCT_DETAILS_LISTED_SUCCESSFULLY,
-    PRODUCT_UPDATED_SUCCESSFULLY,
-    PRODUCT_DOESNT_EXISTS,
-    ORDER_ADDED_SUCCESSFULLY,
-    ORDER_DELETED_SUCCESSFULLY,
-    ORDER_DETAILS_LISTED_SUCCESSFULLY,
-    ORDER_DOESNT_EXISTS,
-    ORDER_UPDATED_SUCCESSFULLY,
-    ORDERS_LISTED_SUCCESSFULLY,
-)
-from e_commerce.settings import TIME_ZONE
-from accounts.models import MyUser
-from shopping.serializers import ProductSerializer, OrderSerializer
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.views import APIView
+
+from shopping import models as ShoppingModels
+from shopping.serializers import OrderSerializer, ProductSerializer
 
 
-class ListCreateProducts(ListCreateAPIView):
-    authentication_classes = (CsrfExemptSessionAuthentication,)
-    queryset = Product.objects.all().order_by("-created_at")
+class ListCreateProducts(generics.ListCreateAPIView):
+    authentication_classes = (AccountsUtils.CsrfExemptSessionAuthentication,)
+    queryset = ShoppingModels.Product.objects.all().order_by("-created_at")
     serializer_class = ProductSerializer
 
     def get(self, request):
         query_dict = {}
-        queryset = Product.objects.filter(**query_dict).all()
+        queryset = self.queryset.filter(**query_dict).all()
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = ProductSerializer(
@@ -56,42 +31,37 @@ class ListCreateProducts(ListCreateAPIView):
 
     def post(self, request, **kwargs):
         try:
-            if Product.objects.filter(name=request.data["name"]).exists():
+            if ShoppingModels.Product.objects.filter(
+                name=request.data["name"]
+            ).exists():
                 response = {
-                    "status": HTTP_400_BAD_REQUEST,
-                    "message": PRODUCT_ALREADY_EXISTS,
+                    "error": EcommerceConstants.PRODUCT_ALREADY_EXISTS,
                 }
-                logging.info(response)
-                return Response(response)
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
-            current_time = get_current_timestamp_of_timezone(TIME_ZONE)
+            current_time = AccountsUtils.get_current_timestamp_of_timezone(
+                EcommerceSettings.TIME_ZONE
+            )
             request.data["created_at"] = datetime.fromtimestamp(
-                current_time, pytz.timezone(TIME_ZONE)
+                current_time, pytz.timezone(EcommerceSettings.TIME_ZONE)
             ).strftime("%Y-%m-%d %H:%M:%S")
             serializer = ProductSerializer(
                 data=request.data, context={"request": request}
             )
             if serializer.is_valid():
                 serializer.save()
-                response = {
-                    "status": HTTP_201_CREATED,
-                    "message": PRODUCT_ADDED_SUCCESSFULLY,
-                }
-                logging.info(response)
-                return Response(response)
+                response = {"message": EcommerceConstants.PRODUCT_ADDED_SUCCESSFULLY}
+                return Response(response, status=status.HTTP_201_CREATED)
             else:
-                response = {"status": HTTP_400_BAD_REQUEST, "error": serializer.errors}
-                logging.info(response)
-                return Response(response)
+                response = {"error": serializer.errors}
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
         except Exception as error:
-            response = {"status": HTTP_400_BAD_REQUEST, "error": error}
-            logging.info(response)
-            return Response(response)
+            return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RetrieveUpdateDeleteProducts(APIView):
-    authentication_classes = (CsrfExemptSessionAuthentication,)
-    queryset = Product.objects.all().order_by("-created_at")
+    authentication_classes = (AccountsUtils.CsrfExemptSessionAuthentication,)
+    queryset = ShoppingModels.Product.objects.all().order_by("-created_at")
     serializer_class = ProductSerializer
 
     def get(self, request, **kwargs):
@@ -99,25 +69,19 @@ class RetrieveUpdateDeleteProducts(APIView):
             product_id = kwargs["product_id"]
             queryset = self.queryset.get(id=product_id)
             serialized_data = ProductSerializer(queryset).data
-            response = {
-                "status": HTTP_200_OK,
-                "message": PRODUCT_DETAILS_LISTED_SUCCESSFULLY,
-                "data": serialized_data,
-            }
-            logging.info(response)
-            return Response(response)
+            return Response(serialized_data, status=status.HTTP_200_OK)
         except Exception as error:
-            response = {"status": HTTP_400_BAD_REQUEST, "error": error}
-            logging.info(response)
-            return Response(response)
+            return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, **kwargs):
         try:
-            product_query = Product.objects.filter(id=kwargs["product_id"])
+            product_query = self.queryset.filter(id=kwargs["product_id"])
             if product_query:
-                current_time = get_current_timestamp_of_timezone(TIME_ZONE)
+                current_time = AccountsUtils.get_current_timestamp_of_timezone(
+                    EcommerceSettings.TIME_ZONE
+                )
                 request.data["date_updated"] = datetime.fromtimestamp(
-                    current_time, pytz.timezone(TIME_ZONE)
+                    current_time, pytz.timezone(EcommerceSettings.TIME_ZONE)
                 ).strftime("%Y-%m-%d %H:%M:%S")
                 product_object = product_query.get()
                 serializer = ProductSerializer(
@@ -129,64 +93,50 @@ class RetrieveUpdateDeleteProducts(APIView):
                 if serializer.is_valid():
                     serializer.save()
                     response = {
-                        "status": HTTP_200_OK,
-                        "message": PRODUCT_UPDATED_SUCCESSFULLY,
+                        "message": EcommerceConstants.PRODUCT_UPDATED_SUCCESSFULLY
                     }
+                    return Response(status=status.HTTP_200_OK)
                 else:
-                    response = {
-                        "status": HTTP_400_BAD_REQUEST,
-                        "error": serializer.errors,
-                    }
-
-                logging.info(response)
-                return Response(response)
+                    response = {"error": serializer.errors}
+                    return Response(response, status=status.HTTP_400_BAD_REQUEST)
             else:
                 response = {
-                    "status": HTTP_400_BAD_REQUEST,
-                    "error": PRODUCT_DOESNT_EXISTS,
+                    "error": EcommerceConstants.PRODUCT_DOESNT_EXISTS,
                 }
-                logging.info(response)
-                return Response(response)
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
         except Exception as error:
-            response = {"status": HTTP_400_BAD_REQUEST, "error": error}
-            logging.info(response)
-            return Response(response)
+            return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, **kwargs):
         try:
-            product_query = Product.objects.filter(id=kwargs["product_id"])
+            product_query = self.queryset.filter(id=kwargs["product_id"])
             if product_query:
                 product_query.delete()
-                response = {
-                    "status": HTTP_200_OK,
-                    "message": PRODUCT_DELETED_SUCCESSFULLY,
-                }
+                response = {"message": EcommerceConstants.PRODUCT_DELETED_SUCCESSFULLY}
+                return Response(response, status=status.HTTP_200_OK)
             else:
                 response = {
-                    "status": HTTP_400_BAD_REQUEST,
-                    "error": PRODUCT_DOESNT_EXISTS,
+                    "error": EcommerceConstants.PRODUCT_DOESNT_EXISTS,
                 }
-
-            logging.info(response)
-            return Response(response)
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
         except Exception as error:
-            response = {"status": HTTP_400_BAD_REQUEST, "error": error}
-            logging.info(response)
-            return Response(response)
+            return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ListCreateOrders(ListCreateAPIView):
-    authentication_classes = (CsrfExemptSessionAuthentication,)
-    queryset = Order.objects.all()
+class ListCreateOrders(generics.ListCreateAPIView):
+    authentication_classes = (AccountsUtils.CsrfExemptSessionAuthentication,)
+    queryset = ShoppingModels.Order.objects.all()
     serializer_class = OrderSerializer
 
     def get(self, request):
         query_dict = {}
         jwt_token = request.META["HTTP_AUTHORIZATION"]
-        user_details = encode_decode_jwt_token(jwt_token, convertion_type=DECODE)
+        user_details = AccountsUtils.encode_decode_jwt_token(
+            jwt_token, convertion_type=EcommerceConstants.DECODE
+        )
         request.username = user_details["username"]
         query_dict["user_id"] = user_details["id"]
-        queryset = Order.objects.filter(**query_dict)
+        queryset = self.queryset.filter(**query_dict)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = OrderSerializer(page, many=True, context={"request": request})
@@ -196,51 +146,44 @@ class ListCreateOrders(ListCreateAPIView):
     def post(self, request, **kwargs):
         try:
             jwt_token = request.META["HTTP_AUTHORIZATION"]
-            user_details = encode_decode_jwt_token(jwt_token, convertion_type=DECODE)
+            user_details = AccountsUtils.encode_decode_jwt_token(
+                jwt_token, convertion_type=EcommerceConstants.DECODE
+            )
             request.username = user_details["username"]
-            current_time = get_current_timestamp_of_timezone(TIME_ZONE)
+            current_time = AccountsUtils.get_current_timestamp_of_timezone(
+                EcommerceSettings.TIME_ZONE
+            )
             request.data["date_placed"] = datetime.fromtimestamp(
-                current_time, pytz.timezone(TIME_ZONE)
+                current_time, pytz.timezone(EcommerceSettings.TIME_ZONE)
             ).strftime("%Y-%m-%d %H:%M:%S")
-            request.data["status"] = ORDER_STATUS[1]  # For order Placed
+            request.data["status"] = EcommerceConstants.ORDER_STATUS[
+                1
+            ]  # For order Placed
             request.data["user_id"] = user_details["id"]
             order_serializer = OrderSerializer(
                 data=request.data, context={"request": request}
             )
             if order_serializer.is_valid():
                 order_serializer.save()
-                order_datas = order_serializer.data
-                orderitems_data = {
-                    "order_id": order_datas["id"],
-                    "product_id": request.data["product_id"],
-                    "quantity": request.data["quantity"],
-                }
                 # orderitem_serializer = OrderItemSerializer(data = orderitems_data, context = {'request':request})
                 # if orderitem_serializer.is_valid():
                 #     orderitem_serializer.save()
                 #     response = {"status": HTTP_201_CREATED, "message": ORDER_ADDED_SUCCESSFULLY, "data": order_serializer.data}
                 # else:
-                response = {
-                    "status": HTTP_400_BAD_REQUEST,
-                    "error": order_serializer.errors,
-                }
+                response = {"message": EcommerceConstants.ORDER_ADDED_SUCCESSFULLY}
+                return Response(response, status=status.HTTP_200_OK)
             else:
                 response = {
-                    "status": HTTP_400_BAD_REQUEST,
                     "error": order_serializer.errors,
                 }
-
-            logging.info(response)
-            return Response(response)
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
         except Exception as error:
-            response = {"status": HTTP_400_BAD_REQUEST, "error": error}
-            logging.info(response)
-            return Response(response)
+            return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RetrieveUpdateDeleteOrders(APIView):
-    authentication_classes = (CsrfExemptSessionAuthentication,)
-    queryset = Order.objects.all()
+    authentication_classes = (AccountsUtils.CsrfExemptSessionAuthentication,)
+    queryset = ShoppingModels.Order.objects.all()
     serializer_class = OrderSerializer
 
     def get(self, request, **kwargs):
@@ -249,24 +192,16 @@ class RetrieveUpdateDeleteOrders(APIView):
             serialized_data = OrderSerializer(
                 queryset, context={"request": request}
             ).data
-            response = {
-                "status": HTTP_200_OK,
-                "message": ORDER_DETAILS_LISTED_SUCCESSFULLY,
-                "data": serialized_data,
-            }
-            logging.info(response)
-            return Response(response)
+            return Response(serialized_data, status=status.HTTP_200_OK)
         except Exception as error:
-            response = {"status": HTTP_400_BAD_REQUEST, "error": error}
-            logging.info(response)
-            return Response(response)
+            return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, **kwargs):
         try:
-            order_query = Order.objects.filter(id=kwargs["order_id"])
+            order_query = self.queryset.filter(id=kwargs["order_id"])
             if order_query:
                 if request.data.get("status"):
-                    request.data["status"] = ORDER_STATUS[
+                    request.data["status"] = EcommerceConstants.ORDER_STATUS[
                         int(request.data.get("status"))
                     ]
 
@@ -283,47 +218,33 @@ class RetrieveUpdateDeleteOrders(APIView):
                         # OrderItem.objects.filter(order_id=kwargs['order_id']).update(quantity  = request.data['quantity'])
                         pass
                     response = {
-                        "status": HTTP_201_CREATED,
-                        "message": ORDER_UPDATED_SUCCESSFULLY,
+                        "message": EcommerceConstants.ORDER_UPDATED_SUCCESSFULLY
                     }
+                    return Response(response, status=status.HTTP_200_OK)
                 else:
-                    response = {
-                        "status": HTTP_400_BAD_REQUEST,
-                        "error": serializer.errors,
-                    }
-
-                logging.info(response)
-                return Response(response)
+                    response = {"error": serializer.errors}
+                    return Response(response, status=status.HTTP_400_BAD_REQUEST)
             else:
                 response = {
-                    "status": HTTP_400_BAD_REQUEST,
-                    "error": ORDER_DOESNT_EXISTS,
+                    "error": EcommerceConstants.ORDER_DOESNT_EXISTS,
                 }
-                logging.info(response)
-                return Response(response)
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
         except Exception as error:
-            response = {"status": HTTP_400_BAD_REQUEST, "error": error}
-            logging.info(response)
-            return Response(response)
+            return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, **kwargs):
         try:
-            order_query = Order.objects.filter(id=kwargs["order_id"])
+            order_query = self.queryset.filter(id=kwargs["order_id"])
             if order_query:
                 order_query.delete()
                 response = {
-                    "status": HTTP_200_OK,
-                    "message": ORDER_DELETED_SUCCESSFULLY,
+                    "message": EcommerceConstants.ORDER_DELETED_SUCCESSFULLY,
                 }
+                return Response(response, status=status.HTTP_200_OK)
             else:
                 response = {
-                    "status": HTTP_400_BAD_REQUEST,
-                    "error": ORDER_DOESNT_EXISTS,
+                    "error": EcommerceConstants.ORDER_DOESNT_EXISTS,
                 }
-
-            logging.info(response)
-            return Response(response)
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
         except Exception as error:
-            response = {"status": HTTP_400_BAD_REQUEST, "error": error}
-            logging.info(response)
-            return Response(response)
+            return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
