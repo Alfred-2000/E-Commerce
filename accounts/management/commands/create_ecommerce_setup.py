@@ -47,7 +47,9 @@ class Command(BaseCommand):
                     admin_serializer_data = {
                         k: v for k, v in admin_serializer_data.items() if v != None
                     }
-                    EcommerceSettings.REDIS_CONNECTION_WRITE.hmset(redis_user_key, admin_serializer_data)
+                    EcommerceSettings.REDIS_CONNECTION_WRITE.hmset(
+                        redis_user_key, admin_serializer_data
+                    )
                     logging.info(
                         "System admin {} created successfully !!!".format(
                             EcommerceConstants.admin_user_details["username"]
@@ -83,7 +85,9 @@ class Command(BaseCommand):
                     debug_serializer_data = {
                         k: v for k, v in debug_serializer_data.items() if v != None
                     }
-                    EcommerceSettings.REDIS_CONNECTION_WRITE.hmset(redis_user_key, debug_serializer_data)
+                    EcommerceSettings.REDIS_CONNECTION_WRITE.hmset(
+                        redis_user_key, debug_serializer_data
+                    )
                     logging.info(
                         "System admin {} created successfully !!!".format(
                             EcommerceConstants.debug_user_details["username"]

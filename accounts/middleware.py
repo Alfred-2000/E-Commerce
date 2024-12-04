@@ -6,6 +6,7 @@ from rest_framework import status
 
 from accounts import utils as AccountsUtils
 from accounts.models import MyUser
+from utilities.classes import ErrorResponse
 
 
 class AuthenticationAuthorisationMiddleware(object):
@@ -30,18 +31,19 @@ class AuthenticationAuthorisationMiddleware(object):
                                 response = self.get_response(request)
                                 return response
                         else:
-                            response = {
-                                "status": status.HTTP_404_NOT_FOUND,
-                                "error": EcommerceConstants.USER_DOSENT_EXISTS,
-                            }
-                            return JsonResponse(response)
+                            return JsonResponse(
+                                ErrorResponse(EcommerceConstants.USER_DOSENT_EXISTS),
+                                status=status.HTTP_404_NOT_FOUND,
+                            )
                     else:
                         return JsonResponse(
-                            {"msg": EcommerceConstants.INVALID_TOKEN, "status": status.HTTP_401_UNAUTHORIZED}
+                            ErrorResponse(EcommerceConstants.INVALID_TOKEN),
+                            status=status.HTTP_401_UNAUTHORIZED,
                         )
                 except Exception as er:
                     return JsonResponse(
-                        {"msg": EcommerceConstants.INVALID_TOKEN, "status": status.HTTP_401_UNAUTHORIZED}
+                        ErrorResponse(EcommerceConstants.INVALID_TOKEN),
+                        status=status.HTTP_401_UNAUTHORIZED,
                     )
             else:
                 request.session.flush()
@@ -50,5 +52,6 @@ class AuthenticationAuthorisationMiddleware(object):
         except Exception as error:
             logging.exception(error)
             return JsonResponse(
-                {"status": status.HTTP_401_UNAUTHORIZED, "error": EcommerceConstants.UNAUTHORISED_ACCESS}
+                ErrorResponse(EcommerceConstants.UNAUTHORISED_ACCESS),
+                status=status.HTTP_401_UNAUTHORIZED,
             )

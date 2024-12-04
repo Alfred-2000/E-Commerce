@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 
 from shopping import models as ShoppingModels
 from shopping.serializers import OrderSerializer, ProductSerializer
+from utilities.classes import SuccessResponse, ErrorResponse
 
 
 class ListCreateProducts(generics.ListCreateAPIView):
@@ -34,10 +35,10 @@ class ListCreateProducts(generics.ListCreateAPIView):
             if ShoppingModels.Product.objects.filter(
                 name=request.data["name"]
             ).exists():
-                response = {
-                    "error": EcommerceConstants.PRODUCT_ALREADY_EXISTS,
-                }
-                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    ErrorResponse(EcommerceConstants.PRODUCT_ALREADY_EXISTS),
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             current_time = AccountsUtils.get_current_timestamp_of_timezone(
                 EcommerceSettings.TIME_ZONE
@@ -50,13 +51,16 @@ class ListCreateProducts(generics.ListCreateAPIView):
             )
             if serializer.is_valid():
                 serializer.save()
-                response = {"message": EcommerceConstants.PRODUCT_ADDED_SUCCESSFULLY}
-                return Response(response, status=status.HTTP_201_CREATED)
+                return Response(
+                    SuccessResponse(EcommerceConstants.PRODUCT_ADDED_SUCCESSFULLY),
+                    status=status.HTTP_201_CREATED,
+                )
             else:
-                response = {"error": serializer.errors}
-                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    ErrorResponse(serializer.errors), status=status.HTTP_400_BAD_REQUEST
+                )
         except Exception as error:
-            return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
 
 
 class RetrieveUpdateDeleteProducts(APIView):
@@ -71,7 +75,7 @@ class RetrieveUpdateDeleteProducts(APIView):
             serialized_data = ProductSerializer(queryset).data
             return Response(serialized_data, status=status.HTTP_200_OK)
         except Exception as error:
-            return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, **kwargs):
         try:
@@ -92,35 +96,41 @@ class RetrieveUpdateDeleteProducts(APIView):
                 )
                 if serializer.is_valid():
                     serializer.save()
-                    response = {
-                        "message": EcommerceConstants.PRODUCT_UPDATED_SUCCESSFULLY
-                    }
-                    return Response(status=status.HTTP_200_OK)
+                    return Response(
+                        SuccessResponse(
+                            EcommerceConstants.PRODUCT_UPDATED_SUCCESSFULLY
+                        ),
+                        status=status.HTTP_200_OK,
+                    )
                 else:
-                    response = {"error": serializer.errors}
-                    return Response(response, status=status.HTTP_400_BAD_REQUEST)
+                    return Response(
+                        ErrorResponse(serializer.errors),
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
             else:
-                response = {
-                    "error": EcommerceConstants.PRODUCT_DOESNT_EXISTS,
-                }
-                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    ErrorResponse(EcommerceConstants.PRODUCT_DOESNT_EXISTS),
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         except Exception as error:
-            return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, **kwargs):
         try:
             product_query = self.queryset.filter(id=kwargs["product_id"])
             if product_query:
                 product_query.delete()
-                response = {"message": EcommerceConstants.PRODUCT_DELETED_SUCCESSFULLY}
-                return Response(response, status=status.HTTP_200_OK)
+                return Response(
+                    SuccessResponse(EcommerceConstants.PRODUCT_DELETED_SUCCESSFULLY),
+                    status=status.HTTP_200_OK,
+                )
             else:
-                response = {
-                    "error": EcommerceConstants.PRODUCT_DOESNT_EXISTS,
-                }
-                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    ErrorResponse(EcommerceConstants.PRODUCT_DOESNT_EXISTS),
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         except Exception as error:
-            return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
 
 
 class ListCreateOrders(generics.ListCreateAPIView):
@@ -168,17 +178,18 @@ class ListCreateOrders(generics.ListCreateAPIView):
                 # orderitem_serializer = OrderItemSerializer(data = orderitems_data, context = {'request':request})
                 # if orderitem_serializer.is_valid():
                 #     orderitem_serializer.save()
-                #     response = {"status": HTTP_201_CREATED, "message": ORDER_ADDED_SUCCESSFULLY, "data": order_serializer.data}
                 # else:
-                response = {"message": EcommerceConstants.ORDER_ADDED_SUCCESSFULLY}
-                return Response(response, status=status.HTTP_200_OK)
+                return Response(
+                    SuccessResponse(EcommerceConstants.ORDER_ADDED_SUCCESSFULLY),
+                    status=status.HTTP_200_OK,
+                )
             else:
-                response = {
-                    "error": order_serializer.errors,
-                }
-                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    ErrorResponse(order_serializer.errors),
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         except Exception as error:
-            return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
 
 
 class RetrieveUpdateDeleteOrders(APIView):
@@ -194,7 +205,7 @@ class RetrieveUpdateDeleteOrders(APIView):
             ).data
             return Response(serialized_data, status=status.HTTP_200_OK)
         except Exception as error:
-            return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, **kwargs):
         try:
@@ -217,34 +228,36 @@ class RetrieveUpdateDeleteOrders(APIView):
                     if request.data.get("quantity"):
                         # OrderItem.objects.filter(order_id=kwargs['order_id']).update(quantity  = request.data['quantity'])
                         pass
-                    response = {
-                        "message": EcommerceConstants.ORDER_UPDATED_SUCCESSFULLY
-                    }
-                    return Response(response, status=status.HTTP_200_OK)
+                    return Response(
+                        SuccessResponse(EcommerceConstants.ORDER_UPDATED_SUCCESSFULLY),
+                        status=status.HTTP_200_OK,
+                    )
                 else:
-                    response = {"error": serializer.errors}
-                    return Response(response, status=status.HTTP_400_BAD_REQUEST)
+                    return Response(
+                        ErrorResponse(serializer.errors),
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
             else:
-                response = {
-                    "error": EcommerceConstants.ORDER_DOESNT_EXISTS,
-                }
-                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    ErrorResponse(EcommerceConstants.ORDER_DOESNT_EXISTS),
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         except Exception as error:
-            return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, **kwargs):
         try:
             order_query = self.queryset.filter(id=kwargs["order_id"])
             if order_query:
                 order_query.delete()
-                response = {
-                    "message": EcommerceConstants.ORDER_DELETED_SUCCESSFULLY,
-                }
-                return Response(response, status=status.HTTP_200_OK)
+                return Response(
+                    SuccessResponse(EcommerceConstants.ORDER_DELETED_SUCCESSFULLY),
+                    status=status.HTTP_200_OK,
+                )
             else:
-                response = {
-                    "error": EcommerceConstants.ORDER_DOESNT_EXISTS,
-                }
-                return Response(response, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    ErrorResponse(EcommerceConstants.ORDER_DOESNT_EXISTS),
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         except Exception as error:
-            return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
