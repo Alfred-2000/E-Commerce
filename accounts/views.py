@@ -4,18 +4,22 @@ from datetime import datetime
 import pytz
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth import get_user_model
 from django.db.models import Q
 from e_commerce import constants as EcommerceConstants
 from e_commerce import settings as EcommerceSettings
-from rest_framework import generics, status
+from rest_framework import generics, mixins, viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.filters import SearchFilter
+from django_filters.rest_framework import DjangoFilterBackend
 
 from accounts import constants as AccountsConstants
 from accounts import utils as AccountsUtils
 from accounts.models import MyUser
 from accounts.serializers import UserSerializer
 from utilities.classes import SuccessResponse, ErrorResponse
+from utilities.permissions import required_superuser_access
 
 
 class LoginView(APIView):
@@ -70,47 +74,19 @@ class LoginView(APIView):
 class RegisterUser(generics.CreateAPIView):
     def post(self, request):
         try:
+            user_details: dict = request.data
             for field, message in AccountsConstants.USER_FIELD_VALIDATION.items():
-                if MyUser.objects.filter(**{field: request.data[field]}).exists():
+                if MyUser.objects.filter(**{field: user_details[field]}).exists():
                     return Response(
                         ErrorResponse(message), status=status.HTTP_400_BAD_REQUEST
                     )
 
-            current_time = AccountsUtils.get_current_timestamp_of_timezone(
-                EcommerceSettings.TIME_ZONE
-            )
-            request.data.update(
-                {
-                    "password": make_password(request.data["password"]),
-                    "created_at": datetime.fromtimestamp(
-                        current_time, pytz.timezone(EcommerceSettings.TIME_ZONE)
-                    ).strftime("%Y-%m-%d %H:%M:%S"),
-                    "user_id": uuid.uuid4(),
-                }
-            )
-            serializer = UserSerializer(
-                data=request.data,
-                context={"request": request},
-            )
-            if serializer.is_valid():
-                serializer.save()
-            else:
-                return Response(
-                    ErrorResponse(serializer.errors), status=status.HTTP_400_BAD_REQUEST
-                )
-
-            serializer_data = serializer.data
-            serializer_data.update(
-                {
-                    key: int(serializer_data[key])
-                    for key in ["is_superuser", "is_staff", "is_active"]
-                }
-            )
-            redis_user_key = AccountsUtils.user_key_redis(serializer_data)
-            serializer_data = {k: v for k, v in serializer_data.items() if v != None}
-            EcommerceSettings.REDIS_CONNECTION_WRITE.hmset(
-                redis_user_key, serializer_data
-            )
+            User = get_user_model()
+            user_details.update({"user_id": uuid.uuid4()})
+            User.objects.create_user(**user_details)
+            user_query = MyUser.objects.get(username=user_details["username"])
+            serializer_data = UserSerializer(user_query).data
+            AccountsUtils.set_user_info_to_redis(serializer_data)
             response_data = {"user_id": serializer_data["user_id"]}
             return Response(
                 SuccessResponse(
@@ -122,106 +98,45 @@ class RegisterUser(generics.CreateAPIView):
             return Response(ErrorResponse(error), status.HTTP_400_BAD_REQUEST)
 
 
-class ListDeleteUsers(generics.ListCreateAPIView):
+class UserManagementViewSet(viewsets.ModelViewSet):
     authentication_classes = (AccountsUtils.CsrfExemptSessionAuthentication,)
-    queryset = MyUser.objects.all().order_by("-updated_at", "-created_at")
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    queryset = MyUser.objects.order_by("-updated_at", "-created_at")
     serializer_class = UserSerializer
     filterset_class = AccountsUtils.UsersListingFilterSet
+    search_fields = AccountsConstants.USERS_SEARCH_AND_FILTER_FIELDS
 
-    def list(self, request):
-        token = request.META.get("HTTP_AUTHORIZATION", None)
-        if not AccountsUtils.check_feature_permission(token):
-            return Response(
-                ErrorResponse(EcommerceConstants.UNAUTHORISED_ACCESS),
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        query_dict = {}
-        queryset = self.queryset.filter(**query_dict).all()
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = UserSerializer(page, many=True, context={"request": request})
-            result = self.get_paginated_response(serializer.data)
-            return result
+    # def get_queryset(self):
+    #     user = self.request.user
+    #     if user.is_superuser:
+    #         return self.queryset
+    #     else:
+    #         return self.queryset.exclude(is_superuser=True)
 
-    def delete(self, request):
+    @required_superuser_access
+    def list(self, request, *args, **kwargs):
+        """
+        Override the list method to check for superuser access before retrieving a user.
+        If the logged-in user is a superuser, allow access to any user; otherwise, allow access
+        only to non-superusers.
+        """
+        return super().list(request, *args, **kwargs)
+
+    @required_superuser_access
+    def put(self, request):
+        """
+        Override the destroy method to check for superuser access before deleting a user.
+        Superusers can delete any user, while non-superusers can only delete their own user.
+        """
         try:
-            token = request.META.get("HTTP_AUTHORIZATION", None)
-            if not AccountsUtils.check_feature_permission(token):
-                return Response(
-                    ErrorResponse(EcommerceConstants.UNAUTHORISED_ACCESS),
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
             deleted_users = []
             users_list = MyUser.objects.filter(user_id__in=request.data["user_ids"])
             for user_object in users_list:
                 user_data = UserSerializer(user_object).data
                 deleted_users.append(user_data)
                 redis_user_key = AccountsUtils.user_key_redis(user_data)
-                EcommerceSettings.REDIS_CONNECTION_WRITE.delete(redis_user_key)
                 user_object.delete()
-            return Response(
-                SuccessResponse(EcommerceConstants.USER_DELETED_SUCCESSFULLY),
-                status=status.HTTP_200_OK,
-            )
-        except Exception as error:
-            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
-
-
-class RetrieveUpdateDeleteUser(generics.ListCreateAPIView):
-    authentication_classes = (AccountsUtils.CsrfExemptSessionAuthentication,)
-
-    def get(self, request, **kwargs):
-        try:
-            user_id = str(kwargs["user_id"])
-            user_query = MyUser.objects.filter(user_id=user_id)
-            user_object = user_query.get()
-            user_data = UserSerializer(user_object).data
-            return Response(user_data, status=status.HTTP_200_OK)
-        except Exception as error:
-            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
-
-    def patch(self, request, **kwargs):
-        try:
-            user_id = str(kwargs["user_id"])
-            user_query = MyUser.objects.filter(user_id=user_id)
-            if request.data.get("password"):
-                request.data["password"] = make_password(request.data["password"])
-            current_time = AccountsUtils.get_current_timestamp_of_timezone(
-                EcommerceSettings.TIME_ZONE
-            )
-            request.data["updated_at"] = datetime.fromtimestamp(
-                current_time, pytz.timezone(EcommerceSettings.TIME_ZONE)
-            ).strftime("%Y-%m-%d %H:%M:%S")
-            user_object = user_query.get()
-            serializer = UserSerializer(
-                user_object,
-                data=request.data,
-                partial=True,
-                context={"request": request},
-            )
-            if serializer.is_valid():
-                serializer.save()
-                return Response(
-                    SuccessResponse(EcommerceConstants.USER_UPDATED_SUCCESSFULLY),
-                    status=status.HTTP_200_OK,
-                )
-            else:
-                return Response(
-                    ErrorResponse(serializer.errors), status=status.HTTP_400_BAD_REQUEST
-                )
-        except Exception as error:
-            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, **kwargs):
-        try:
-            user_id = str(kwargs["user_id"])
-            user_query = MyUser.objects.filter(user_id=user_id)
-            user_object = user_query.get()
-            user_data = UserSerializer(user_object).data
-            redis_user_key = AccountsUtils.user_key_redis(user_data)
-            EcommerceSettings.REDIS_CONNECTION_WRITE.delete(redis_user_key)
-            user_object.delete()
+                EcommerceSettings.REDIS_CONNECTION_WRITE.delete(redis_user_key)
             return Response(
                 SuccessResponse(EcommerceConstants.USER_DELETED_SUCCESSFULLY),
                 status=status.HTTP_200_OK,

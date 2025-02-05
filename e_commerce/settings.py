@@ -68,7 +68,7 @@ ROOT_URLCONF = "e_commerce.urls"
 
 OPEN_API = {
     "login": 1,
-    "account-register": 1,
+    "account_register": 1,
 }
 
 MEDIA_URL = "/media/"

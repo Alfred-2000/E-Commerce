@@ -13,7 +13,9 @@ class Command(BaseCommand):
         logging.info("STARTING_CELERY_WORKER" + LOG_LINES)
         try:
             logfile = "/tmp/debug.log"
-            cmd = f"celery -A e_commerce worker -Q {CELERY_DEFAULT_QUEUE} -l INFO --concurrency={CELERY_DEFAULT_WORKER} --prefetch-multiplier=1 -O fair -f {logfile}"
+            cmd = f"celery -A e_commerce worker -Q {CELERY_DEFAULT_QUEUE} -l INFO\
+                --concurrency={CELERY_DEFAULT_WORKER} --prefetch-multiplier=1 -O fair\
+                    -f {logfile}"
             subprocess.call([cmd], shell=True)
         except Exception as error:
             logging.info(

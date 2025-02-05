@@ -26,8 +26,11 @@ class AuthenticationAuthorisationMiddleware(object):
                             token_data = AccountsUtils.encode_decode_jwt_token(
                                 token, convertion_type=EcommerceConstants.DECODE
                             )
-                            user_query = MyUser.objects.filter(user_id=token_data["id"])
+                            user_query = MyUser.objects.filter(
+                                user_id=token_data["id"]
+                            ).first()
                             if user_query:
+                                request.user = user_query
                                 response = self.get_response(request)
                                 return response
                         else:

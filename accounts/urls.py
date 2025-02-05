@@ -1,18 +1,16 @@
-from django.urls import re_path
+from django.urls import re_path, include
 from rest_framework import routers
 
 from accounts import views as AccountsViews
 
 router = routers.DefaultRouter()
+router.register(
+    r"users", AccountsViews.UserManagementViewSet, basename="user_management"
+)
 
 urlpatterns = [
-    re_path(r"list/", AccountsViews.ListDeleteUsers.as_view(), name="accounts_list"),
+    re_path(r"^", include(router.urls)),
     re_path(
-        r"register/", AccountsViews.RegisterUser.as_view(), name="account-register"
-    ),
-    re_path(
-        r"(?P<user_id>[\w-]+)/",
-        AccountsViews.RetrieveUpdateDeleteUser.as_view(),
-        name="manage_accounts",
+        r"register/", AccountsViews.RegisterUser.as_view(), name="account_register"
     ),
 ]

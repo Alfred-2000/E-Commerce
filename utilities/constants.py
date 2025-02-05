@@ -1,7 +1,11 @@
 from django.db import models
 
-from utilities import classes as UtilitiesClasses
-from utilities.classes import LookupExpression
+FILTER_FIELD_TYPE_LOOKUP_MAP = {
+    "number": ["in", "notin", "gt", "gte", "lt", "lte", "range", "notrange"],
+    "string": ["in", "notin", "contains", "icontains", "startswith", "endswith"],
+    "boolean": ["exact"],
+    "timestamp": ["range"],
+}
 
 API_TYPES_MAPPING = {
     "int": "number",
@@ -17,61 +21,30 @@ API_TYPES_MAPPING = {
     "uuid": "string",
 }
 
-FILTER_FIELD_TYPE_LOOKUP_MAP = {
-    "number": [
-        LookupExpression.IN,
-        LookupExpression.NOTIN,
-        LookupExpression.GT,
-        LookupExpression.GTE,
-        LookupExpression.LTE,
-        LookupExpression.LT,
-        LookupExpression.RANGE,
-        LookupExpression.NOTRANGE,
-    ],
-    "string": [
-        LookupExpression.IN,
-        LookupExpression.NOTIN,
-        LookupExpression.CONTAINS,
-        LookupExpression.ICONTAINS,
-        LookupExpression.NOTCONTAINS,
-        LookupExpression.NOTICONTAINS,
-        LookupExpression.CONTAINSIN,
-        LookupExpression.ICONTAINSIN,
-        LookupExpression.NOTCONTAINSIN,
-        LookupExpression.NOTICONTAINSIN,
-    ],
-    "boolean": [
-        LookupExpression.EXACT,
-    ],
-    "timestamp": [
-        LookupExpression.RANGE,
-    ],
-}
-
-DJANGO_FIELD_TO_PYTHON_TYPE: dict[type, str] = {
-    models.AutoField: UtilitiesClasses.DataTypes.INT,
-    models.BigAutoField: UtilitiesClasses.DataTypes.INT,
-    models.BigIntegerField: UtilitiesClasses.DataTypes.INT,
-    models.BinaryField: UtilitiesClasses.DataTypes.BYTES,
-    models.BooleanField: UtilitiesClasses.DataTypes.BOOL,
-    models.CharField: UtilitiesClasses.DataTypes.STRING,
-    models.DateField: UtilitiesClasses.DataTypes.DATE,
-    models.DateTimeField: UtilitiesClasses.DataTypes.TIMESTAMP,
-    models.DecimalField: UtilitiesClasses.DataTypes.FLOAT,
-    models.DurationField: UtilitiesClasses.DataTypes.TIMEDELTA,
-    models.EmailField: UtilitiesClasses.DataTypes.STRING,
-    models.FileField: UtilitiesClasses.DataTypes.FILE,
-    models.FilePathField: UtilitiesClasses.DataTypes.STRING,
-    models.FloatField: UtilitiesClasses.DataTypes.FLOAT,
-    models.ImageField: UtilitiesClasses.DataTypes.BYTES,
-    models.IntegerField: UtilitiesClasses.DataTypes.INT,
-    models.GenericIPAddressField: UtilitiesClasses.DataTypes.STRING,
-    models.PositiveIntegerField: UtilitiesClasses.DataTypes.INT,
-    models.PositiveSmallIntegerField: UtilitiesClasses.DataTypes.INT,
-    models.SlugField: UtilitiesClasses.DataTypes.STRING,
-    models.SmallIntegerField: UtilitiesClasses.DataTypes.INT,
-    models.TextField: UtilitiesClasses.DataTypes.STRING,
-    models.TimeField: UtilitiesClasses.DataTypes.TIME,
-    models.URLField: UtilitiesClasses.DataTypes.STRING,
-    models.UUIDField: UtilitiesClasses.DataTypes.UUID,
+DJANGO_FIELD_TO_PYTHON_TYPE = {
+    models.AutoField: "int",
+    models.BigAutoField: "int",
+    models.BigIntegerField: "int",
+    models.BinaryField: "bytes",
+    models.BooleanField: "bool",
+    models.CharField: "string",
+    models.DateField: "date",
+    models.DateTimeField: "timestamp",
+    models.DecimalField: "float",
+    models.DurationField: "timedelta",
+    models.EmailField: "string",
+    models.FileField: "file",
+    models.FilePathField: "string",
+    models.FloatField: "float",
+    models.ImageField: "bytes",
+    models.IntegerField: "int",
+    models.GenericIPAddressField: "string",
+    models.PositiveIntegerField: "int",
+    models.PositiveSmallIntegerField: "int",
+    models.SlugField: "string",
+    models.SmallIntegerField: "int",
+    models.TextField: "string",
+    models.TimeField: "time",
+    models.URLField: "string",
+    models.UUIDField: "uuid",
 }

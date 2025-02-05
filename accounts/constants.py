@@ -20,3 +20,13 @@ USER_FIELD_VALIDATION = {
     "email": EcommerceConstants.EMAIL_ALREADY_EXISTS,
     "phone_number": EcommerceConstants.PHONE_NUMBER_ALREADY_EXISTS,
 }
+
+USERS_SEARCH_AND_FILTER_FIELDS = [
+    "username",
+    "first_name",
+    "last_name",
+    "email",
+    "phone_number",
+    "state",
+    "country",
+]
