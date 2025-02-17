@@ -56,6 +56,7 @@ class Command(BaseCommand):
                 if not MyUser.objects.filter(
                     username=debug_user_details["username"]
                 ).exists():
+                    debug_user_details.update({"user_id": uuid.uuid4()})
                     User.objects.create_superuser(**debug_user_details)
                     debug_user_details.update({"user_id": uuid.uuid4()})
                     user_query2 = MyUser.objects.get(
@@ -121,12 +122,6 @@ class Command(BaseCommand):
         and custom tasks related to the system setup.
         """
         try:
-            # Running the makemigrations command to generate migration files
-            call_command("makemigrations")
-
-            # Running the migrate command to apply database migrations
-            call_command("migrate")
-
             # Creating default admin users
             self.create_default_admin_users()
 

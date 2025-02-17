@@ -24,11 +24,7 @@ urlpatterns = [
     re_path(r"^admin/", admin.site.urls),
     re_path(r"^api/login/", AccountsViews.LoginView.as_view(), name="login"),
     re_path(r"^api/account/", include("accounts.urls")),
-    re_path(r"^api/products/", ShoppingViews.ListCreateProducts.as_view()),
-    re_path(
-        r"^api/products/(?P<product_id>[\w-]+)/",
-        ShoppingViews.RetrieveUpdateDeleteProducts.as_view(),
-    ),
+    re_path(r"^api/shopping/", include("shopping.urls")),
     re_path(r"^api/orders/", ShoppingViews.ListCreateOrders.as_view()),
     re_path(
         r"^api/orders/(?P<order_id>[\w-]+)/",

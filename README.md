@@ -2,6 +2,7 @@
 #Execute inside postgresql to create database:
 ---------------------------------------------------------------------------------
 DROP DATABASE IF EXISTS ecommerce;
+REVOKE ALL PRIVILEGES ON SCHEMA public FROM ecommerceuser;
 DROP USER IF EXISTS ecommerceuser;
 CREATE DATABASE ecommerce;
 CREATE USER ecommerceuser WITH PASSWORD 'password';
@@ -37,6 +38,10 @@ python manage.py startapp shopping
 
 ---------------------------------------------------------------------------------
 for x in accounts shopping system; do rm -rf $x/migrations; mkdir $x/migrations; touch $x/migrations/__init__.py; done
+
+python manage.py makemigrations
+
+python manage.py migrate
 
 python manage.py create_ecommerce_setup
 

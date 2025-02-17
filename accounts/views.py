@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 from e_commerce import constants as EcommerceConstants
 from e_commerce import settings as EcommerceSettings
-from rest_framework import generics, mixins, viewsets, status
+from rest_framework import generics, mixins, viewsets, status, decorators
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.filters import SearchFilter
@@ -18,7 +18,7 @@ from accounts import constants as AccountsConstants
 from accounts import utils as AccountsUtils
 from accounts.models import MyUser
 from accounts.serializers import UserSerializer
-from utilities.classes import SuccessResponse, ErrorResponse
+from utilities.classes import SuccessResponse, ErrorResponse, HttpMethod
 from utilities.permissions import required_superuser_access
 
 
@@ -123,7 +123,12 @@ class UserManagementViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
     @required_superuser_access
-    def put(self, request):
+    @decorators.action(
+        detail=False,
+        url_path="delete",
+        methods=[HttpMethod.DELETE],
+    )
+    def delete_many(self, request):
         """
         Override the destroy method to check for superuser access before deleting a user.
         Superusers can delete any user, while non-superusers can only delete their own user.
@@ -139,7 +144,7 @@ class UserManagementViewSet(viewsets.ModelViewSet):
                 EcommerceSettings.REDIS_CONNECTION_WRITE.delete(redis_user_key)
             return Response(
                 SuccessResponse(EcommerceConstants.USER_DELETED_SUCCESSFULLY),
-                status=status.HTTP_200_OK,
+                status=status.HTTP_204_NO_CONTENT,
             )
         except Exception as error:
             return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)

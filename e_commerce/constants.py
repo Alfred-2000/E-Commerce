@@ -46,6 +46,8 @@ PRODUCT_DELETED_SUCCESSFULLY = "Product deleted successfully"
 
 PRODUCTS_LISTED_SUCCESSFULLY = "Products listed successfully"
 
+PRODUCTS_DELETED_SUCCESSFULLY = "Products deleted successfully"
+
 PRODUCT_DOESNT_EXISTS = "Product does not exists"
 
 ORDER_DETAILS_LISTED_SUCCESSFULLY = "Order details listed successfully"

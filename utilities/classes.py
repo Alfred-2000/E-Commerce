@@ -1,3 +1,6 @@
+import enum
+
+
 class ResponseMessages:
     def success_response(self, msg: str, data: dict = None) -> dict:
         """
@@ -32,3 +35,21 @@ class ResponseMessages:
 responseMessage = ResponseMessages()
 SuccessResponse = responseMessage.success_response
 ErrorResponse = responseMessage.error_response
+
+
+class StrEnum(str, enum.Enum):
+    def _generate_next_value_(name, *_):
+        return name
+
+
+class LowercaseStrEnum(StrEnum):
+    def _generate_next_value_(name, *_):
+        return name.lower()
+
+
+class HttpMethod(LowercaseStrEnum):
+    GET = enum.auto()
+    POST = enum.auto()
+    PUT = enum.auto()
+    PATCH = enum.auto()
+    DELETE = enum.auto()
