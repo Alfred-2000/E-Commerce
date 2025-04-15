@@ -2,7 +2,7 @@ import hashlib
 import logging
 from datetime import datetime
 from typing import Union
-import django_filters
+
 import jwt
 import pytz
 from django.urls import resolve
@@ -10,8 +10,8 @@ from e_commerce import constants as EcommerceConstants
 from e_commerce import settings as EcommerceSettings
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.request import Request
-from utilities import filtersets as UtilitiesFilters
-from django.db import models
+from utils import filtersets as UtilitiesFilters
+
 from accounts import constants as AccountsConstants
 from accounts.models import MyUser
 
@@ -134,7 +134,7 @@ def validate_jwt_token(token: str) -> bool:
             token, convertion_type=EcommerceConstants.DECODE
         )
         if user_details:
-            user_query = MyUser.objects.filter(user_id=user_details["id"])
+            user_query = MyUser.objects.filter(user_id=user_details["user_id"])
             token_status = True if user_query else False
         return token_status
     except Exception as error:
@@ -198,7 +198,7 @@ def set_user_info_to_redis(user_details: dict) -> None:
         }
     )
     redis_user_key = user_key_redis(user_details)
-    user_details = {k: v for k, v in user_details.items() if v != None}
+    user_details = {k: v for k, v in user_details.items() if v is not None}
     EcommerceSettings.REDIS_CONNECTION_WRITE.hmset(redis_user_key, user_details)
 
 

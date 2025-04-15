@@ -5,7 +5,7 @@ from accounts import utils as AccountsUtils
 from accounts.models import MyUser
 from accounts.serializers import UserSerializer
 from django.contrib.auth import get_user_model
-from django.core.management import BaseCommand, call_command
+from django.core.management import BaseCommand
 from e_commerce import constants as EcommerceConstants
 from e_commerce import settings as EcommerceSettings
 from system.models import SystemConfig
@@ -71,7 +71,7 @@ class Command(BaseCommand):
                     )
                     redis_user_key = AccountsUtils.user_key_redis(debug_serializer_data)
                     debug_serializer_data = {
-                        k: v for k, v in debug_serializer_data.items() if v != None
+                        k: v for k, v in debug_serializer_data.items() if v is not None
                     }
                     EcommerceSettings.REDIS_CONNECTION_WRITE.hmset(
                         redis_user_key, debug_serializer_data

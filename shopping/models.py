@@ -1,6 +1,6 @@
 from django.db import models
 from e_commerce.constants import ORDER_STATUS
-from utilities import models as UtilitiesModels
+from utils import models as UtilitiesModels
 
 
 class Product(UtilitiesModels.CommonAttributes):

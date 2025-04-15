@@ -23,11 +23,7 @@ from shopping import views as ShoppingViews
 urlpatterns = [
     re_path(r"^admin/", admin.site.urls),
     re_path(r"^api/login/", AccountsViews.LoginView.as_view(), name="login"),
+    re_path(r"^api/logout/", AccountsViews.LogoutView.as_view(), name="logout"),
     re_path(r"^api/account/", include("accounts.urls")),
     re_path(r"^api/shopping/", include("shopping.urls")),
-    re_path(r"^api/orders/", ShoppingViews.ListCreateOrders.as_view()),
-    re_path(
-        r"^api/orders/(?P<order_id>[\w-]+)/",
-        ShoppingViews.RetrieveUpdateDeleteOrders.as_view(),
-    ),
 ]

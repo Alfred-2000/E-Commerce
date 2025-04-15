@@ -30,9 +30,35 @@
 									"    }",
 									"});",
 									"",
-									"console.log(\"after Authorization Env :\",  pm.collectionVariables.get('authToken'));"
+									"console.log(\"after Authorization Env :\",  pm.collectionVariables.get('authToken'));",
+									"",
+									"let response = pm.response.json();",
+									"pm.collectionVariables.set(\"user_id\", response.user_id);",
+									""
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var username = pm.collectionVariables.get(\"username\");",
+									"var password = pm.collectionVariables.get(\"password\");",
+									"",
+									"var username = \"Super-Admin\";",
+									"var password = \"Ecommerce@!123\";",
+									"",
+									"const userCreds = {",
+									"    \"username\": username,",
+									"    \"password\": password",
+									"};",
+									"",
+									"pm.environment.set(\"userCreds\", JSON.stringify(userCreds));"
+								],
+								"type": "text/javascript",
+								"packages": {}
 							}
 						}
 					],
@@ -41,7 +67,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"a1user2\",\n    \"password\": \"PassWord@1\"\n}",
+							"raw": "{{userCreds}}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -56,6 +82,62 @@
 							"path": [
 								"api",
 								"login",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/logout/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"logout",
 								""
 							]
 						}
@@ -91,15 +173,57 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}/api/account/list/",
+							"raw": "{{baseURL}}/api/account/user/",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
 								"api",
 								"account",
-								"list",
+								"user",
 								""
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "john",
+									"disabled": true
+								},
+								{
+									"key": "offset",
+									"value": "0",
+									"disabled": true
+								},
+								{
+									"key": "username__endswith",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "state__icontains",
+									"value": "pun",
+									"disabled": true
+								},
+								{
+									"key": "last_name",
+									"value": "Garcia",
+									"disabled": true
+								},
+								{
+									"key": "email__icontains",
+									"value": "admin",
+									"disabled": true
+								},
+								{
+									"key": "first_name__icontains",
+									"value": "ordan",
+									"disabled": true
+								}
 							]
 						}
 					},
@@ -107,12 +231,93 @@
 				},
 				{
 					"name": "Register user",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const responseJson = pm.response.json();",
+									"",
+									"pm.collectionVariables.set(\"user_id\", responseJson.user_id);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const firstNames = ['John', 'Jane', 'Alex', 'Sam', 'Chris', 'Taylor', 'Jordan', 'Pat', 'Charlie', 'Max'];",
+									"const lastNames = ['Smith', 'Doe', 'Johnson', 'Williams', 'Brown', 'Jones', 'Miller', 'Davis', 'Garcia', 'Rodriguez'];",
+									"const statesNames = ['Tamil Nadu', 'Karnataka', 'Delhi', 'Maharashtra', 'Uttar Pradesh', 'Gujarat', 'Rajasthan', 'Kerala', 'Punjab', 'West Bengal'];",
+									"",
+									"function generateRandomString(length) {",
+									"    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';",
+									"    let result = '';",
+									"    for (let i = 0; i < length; i++) {",
+									"        result += characters.charAt(Math.floor(Math.random() * characters.length));",
+									"    }",
+									"    return result;",
+									"}",
+									"",
+									"function generateRandomPhoneNumber() {",
+									"    return Math.floor(Math.random() * 9000000000);",
+									"}",
+									"",
+									"function generateRandomFirstName() {",
+									"    return firstNames[Math.floor(Math.random() * firstNames.length)];",
+									"}",
+									"",
+									"function generateRandomLastName() {",
+									"    return lastNames[Math.floor(Math.random() * lastNames.length)];",
+									"}",
+									"",
+									"function generateRandomUsername(firstName, lastName) {",
+									"    const randomNumber = Math.floor(Math.random() * 1000);",
+									"    return firstName.toLowerCase() + lastName.toLowerCase() + randomNumber;",
+									"}",
+									"",
+									"function generateRandomEmail(username) {",
+									"    return username + '@gmail.com';",
+									"}",
+									"",
+									"function generateRandomStateName() {",
+									"    return statesNames[Math.floor(Math.random() * statesNames.length)];",
+									"}",
+									"",
+									"const firstName = generateRandomFirstName();",
+									"const lastName = generateRandomLastName();",
+									"const username = generateRandomUsername(firstName, lastName);",
+									"",
+									"const userData = {",
+									"    \"first_name\": firstName,",
+									"    \"last_name\": lastName,",
+									"    \"username\": username,",
+									"    \"password\": \"PassWord@\" + Math.floor(Math.random() * 1000),",
+									"    \"email\": generateRandomEmail(username),",
+									"    \"phone_code\": \"+91\",",
+									"    \"phone_number\": generateRandomPhoneNumber(),",
+									"    \"state\": generateRandomStateName(),",
+									"    \"country\": \"India\"",
+									"};",
+									"",
+									"pm.environment.set(\"userData\", JSON.stringify(userData));",
+									"",
+									"pm.collectionVariables.set(\"username\", userData.username);",
+									"pm.collectionVariables.set(\"password\", userData.password);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"first_name\": \"user1\",\n    \"last_name\": \"a1\",\n    \"username\": \"a1user2\",\n    \"password\": \"PassWord@1\",\n    \"email\": \"abc2@gmail.com\",\n    \"phone_code\": \"+91\",\n    \"phone_number\": \"9098909872\",\n    \"state\": \"Tamil Nadu\",\n    \"country\": \"India\"\n}",
+							"raw": "{{userData}}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -193,13 +398,14 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}/api/account/{{user_id}}/",
+							"raw": "{{baseURL}}/api/account/user/{{user_id}}/",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
 								"api",
 								"account",
+								"user",
 								"{{user_id}}",
 								""
 							]
@@ -209,6 +415,73 @@
 				},
 				{
 					"name": "Update user details",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const firstNames = ['John', 'Jane', 'Alex', 'Sam', 'Chris', 'Taylor', 'Jordan', 'Pat', 'Charlie', 'Max'];",
+									"const lastNames = ['Smith', 'Doe', 'Johnson', 'Williams', 'Brown', 'Jones', 'Miller', 'Davis', 'Garcia', 'Rodriguez'];",
+									"const statesNames = ['Tamil Nadu', 'Karnataka', 'Delhi', 'Maharashtra', 'Uttar Pradesh', 'Gujarat', 'Rajasthan', 'Kerala', 'Punjab', 'West Bengal'];",
+									"",
+									"function generateRandomString(length) {",
+									"    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';",
+									"    let result = '';",
+									"    for (let i = 0; i < length; i++) {",
+									"        result += characters.charAt(Math.floor(Math.random() * characters.length));",
+									"    }",
+									"    return result;",
+									"}",
+									"",
+									"function generateRandomPhoneNumber() {",
+									"    return '+91' + Math.floor(Math.random() * 1000000000);",
+									"}",
+									"",
+									"function generateRandomFirstName() {",
+									"    return firstNames[Math.floor(Math.random() * firstNames.length)];",
+									"}",
+									"",
+									"function generateRandomLastName() {",
+									"    return lastNames[Math.floor(Math.random() * lastNames.length)];",
+									"}",
+									"",
+									"function generateRandomUsername(firstName, lastName) {",
+									"    const randomNumber = Math.floor(Math.random() * 1000);",
+									"    return firstName.toLowerCase() + lastName.toLowerCase() + randomNumber;",
+									"}",
+									"",
+									"function generateRandomEmail(username) {",
+									"    return username + '@gmail.com';",
+									"}",
+									"",
+									"function generateRandomStateName() {",
+									"    return statesNames[Math.floor(Math.random() * statesNames.length)];",
+									"}",
+									"",
+									"const firstName = generateRandomFirstName();",
+									"const lastName = generateRandomLastName();",
+									"const username = generateRandomUsername(firstName, lastName);",
+									"",
+									"const userData = {",
+									"    \"first_name\": firstName,",
+									"    \"last_name\": lastName,",
+									"    // \"username\": username,",
+									"    // \"password\": \"PassWord@\" + Math.floor(Math.random() * 1000),",
+									"    // \"email\": generateRandomEmail(username),",
+									"    // \"phone_code\": \"+91\",",
+									"    // \"phone_number\": generateRandomPhoneNumber(),",
+									"    // \"state\": generateRandomStateName(),",
+									"    // \"country\": \"India\"",
+									"};",
+									"",
+									"pm.environment.set(\"userData\", JSON.stringify(userData));",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
 						"method": "PATCH",
 						"header": [
@@ -220,7 +493,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"a22user\",\n    \"email\": \"a22user@gmail.com\",\n    \"phone_number\": \"+90 4098909822\"\n}",
+							"raw": "{{userData}}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -228,13 +501,14 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}/api/account/{{user_id}}/",
+							"raw": "{{baseURL}}/api/account/user/{{user_id}}/",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
 								"api",
 								"account",
+								"user",
 								"{{user_id}}",
 								""
 							]
@@ -253,15 +527,61 @@
 								"type": "text"
 							}
 						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
 						"url": {
-							"raw": "{{baseURL}}/api/account/{{user_id}}/",
+							"raw": "{{baseURL}}/api/account/user/{{user_id}}/",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
 								"api",
 								"account",
+								"user",
 								"{{user_id}}",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete users",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_ids\": [\"079093a0-66ad-4023-b458-615fb662735b\",\n    \"418538cc-9244-4992-bb97-ea98acf6fd47\",\n    \"53e92b69-0cf1-4a56-94ad-07ffae628368\",\n    \"b5a54edd-533e-4da5-a8b2-1b8dcfca9e72\",\n    \"920ce369-6f5c-4658-b8d4-3d8b77d8af33\",\n    \"dc389fe6-24b8-4e8e-bbff-f6303f10e168\",\n    \"93075e03-4255-4237-8f19-f4040797467e\",\n    \"e30c9249-bb7f-45d8-a7ab-d4a9b82f384a\",\n    \"925d859b-57ae-4daa-b30d-1757b135d3f4\",\n    \"e5dcb2f2-79f4-4cfc-bcb2-ffe4ae769f82\",\n    \"ea36c26b-5225-461c-85f8-f0d7d6fa298a\",\n    \"754fb467-9f7b-4533-960a-f34021bd171c\",\n    \"b0ff4ab3-5188-4e78-b6b6-d8a6cb4c01ba\",\n    \"3d19e07e-2f5c-4160-98c3-e20aa6ce3325\",\n    \"a2b94c69-27ca-4320-a85c-d3d0508afa27\",\n    \"ca313e66-c7c6-44be-b670-5018d3dfa759\",\n    \"d2faf9a6-5918-4df7-a292-4691c624fa22\",\n    \"52b8f91e-11f6-4ee7-ab50-cf5ab8cf3bea\",\n    \"7d738057-1733-4bb4-8f22-43222a01495f\",\n    \"d17e2900-771c-4639-a3d2-92de5dc68e3f\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/account/user/delete/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"account",
+								"user",
+								"delete",
 								""
 							]
 						}
@@ -311,6 +631,47 @@
 			"item": [
 				{
 					"name": "Create Products",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const productNames = [",
+									"    'Smartphone', 'Laptop', 'Tablet', 'Headphones', 'Smartwatch', ",
+									"    'Camera', 'Television', 'Keyboard', 'Mouse', 'Speakers', ",
+									"    'Washing Machine', 'Refrigerator', 'Microwave', 'Vacuum Cleaner', ",
+									"    'Air Conditioner', 'Blender', 'Coffee Maker', 'Fan', 'Toaster', 'Shaver'",
+									"];",
+									"const randomPrice = Math.floor(Math.random() * (50000 - 10000 + 1)) + 10000;",
+									"const randomName = productNames[Math.floor(Math.random() * productNames.length)] + '_' + randomPrice;",
+									"const randomDescription = `A high-quality ${randomName} for everyday use.`;",
+									"",
+									"const productData = {",
+									"    \"name\": randomName,",
+									"    \"description\": randomDescription,",
+									"    \"price\": randomPrice",
+									"};",
+									"",
+									"pm.environment.set(\"productData\", JSON.stringify(productData));",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const responseJson = pm.response.json();",
+									"",
+									"pm.collectionVariables.set(\"product_id\", responseJson.id);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [
@@ -322,7 +683,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"Samsung4\",\n    \"description\": \"abc1d\",\n    \"price\": \"20008\"\n}",
+							"raw": "{{productData}}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -330,13 +691,14 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}/api/products/",
+							"raw": "{{baseURL}}/api/shopping/product/",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
 								"api",
-								"products",
+								"shopping",
+								"product",
 								""
 							]
 						}
@@ -355,14 +717,40 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseURL}}/api/product/",
+							"raw": "{{baseURL}}/api/shopping/product/?limit=10&offset=0",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
 								"api",
+								"shopping",
 								"product",
 								""
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "search",
+									"value": "ble",
+									"disabled": true
+								},
+								{
+									"key": "name__icontains",
+									"value": "mic",
+									"disabled": true
+								},
+								{
+									"key": "description__icontains",
+									"value": "high",
+									"disabled": true
+								}
 							]
 						}
 					},
@@ -380,14 +768,15 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseURL}}/api/product/8d2b277c-09e5-4a16-aa8a-509f5384900e/",
+							"raw": "{{baseURL}}/api/shopping/product/{{product_id}}/",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
 								"api",
+								"shopping",
 								"product",
-								"8d2b277c-09e5-4a16-aa8a-509f5384900e",
+								"{{product_id}}",
 								""
 							]
 						}
@@ -415,14 +804,15 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}/api/product/430acbfd-8317-4fe5-b6e5-77d03be6c8d4/",
+							"raw": "{{baseURL}}/api/shopping/product/{{product_id}}/",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
 								"api",
+								"shopping",
 								"product",
-								"430acbfd-8317-4fe5-b6e5-77d03be6c8d4",
+								"{{product_id}}",
 								""
 							]
 						}
@@ -441,14 +831,15 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseURL}}/api/account/f2733cc1-04df-458d-986f-07796959f97c/",
+							"raw": "{{baseURL}}/api/shopping/product/{{product_id}}/",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
 								"api",
-								"account",
-								"f2733cc1-04df-458d-986f-07796959f97c",
+								"shopping",
+								"product",
+								"{{product_id}}",
 								""
 							]
 						}
@@ -468,7 +859,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"product_ids\": [\"a17e1c2d-30c3-4f38-bd70-04895e6f201f\", \"1103019e-bede-4961-a9f2-a23987654349\", \"9789e3b0-e3bd-475e-90ea-942d5a7be721\"]\n}",
+							"raw": "{\n    \"ids\": [1, 3, 4]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -476,13 +867,15 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}/api/product/",
+							"raw": "{{baseURL}}/api/shopping/product/delete/",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
 								"api",
+								"shopping",
 								"product",
+								"delete",
 								""
 							]
 						}
@@ -496,6 +889,20 @@
 			"item": [
 				{
 					"name": "Create Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const responseJson = pm.response.json();",
+									"",
+									"pm.collectionVariables.set(\"order_id\", responseJson.id);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [
@@ -507,7 +914,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"product_id\" : \"3a6cf661-5625-4d37-9826-2b15dafde2c5\",\n    \"quantity\": 2\n}",
+							"raw": "{\n    \"product_id\" : 1,\n    \"quantity\": 2\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -515,12 +922,13 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}/api/order/",
+							"raw": "{{baseURL}}/api/shopping/order/",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
 								"api",
+								"shopping",
 								"order",
 								""
 							]
@@ -552,12 +960,13 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}/api/order/",
+							"raw": "{{baseURL}}/api/shopping/order/",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
 								"api",
+								"shopping",
 								"order",
 								""
 							]
@@ -577,40 +986,15 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseURL}}/api/orders/6/",
+							"raw": "{{baseURL}}/api/shopping/order/{{order_id}}/",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
 								"api",
-								"orders",
-								"6",
-								""
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Retrieve order details",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{authToken}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseURL}}/api/order/57f2dec2-eb19-41de-8a9d-ee7ad26a0689/",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"api",
+								"shopping",
 								"order",
-								"57f2dec2-eb19-41de-8a9d-ee7ad26a0689",
+								"{{order_id}}",
 								""
 							]
 						}
@@ -630,7 +1014,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"status\": 0,\n    \"quantity\": 2\n}",
+							"raw": "{\n    \"order_status\": 2,\n    \"quantity\": 3\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -638,14 +1022,15 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}/api/order/57f2dec2-eb19-41de-8a9d-ee7ad26a0689/",
+							"raw": "{{baseURL}}/api/shopping/order/{{order_id}}/",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
 								"api",
+								"shopping",
 								"order",
-								"57f2dec2-eb19-41de-8a9d-ee7ad26a0689",
+								"{{order_id}}",
 								""
 							]
 						}
@@ -664,14 +1049,51 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseURL}}/api/order/bcf0f36b-8919-4122-933a-3470a9397007/",
+							"raw": "{{baseURL}}/api/shopping/order/{{order_id}}/",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
 								"api",
+								"shopping",
 								"order",
-								"bcf0f36b-8919-4122-933a-3470a9397007",
+								"{{order_id}}",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Orders",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ids\": [1, 3, 4]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/shopping/order/delete/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"shopping",
+								"order",
+								"delete",
 								""
 							]
 						}
@@ -704,7 +1126,7 @@
 	"variable": [
 		{
 			"key": "baseURL",
-			"value": "http://127.0.0.1:8000",
+			"value": "http://127.0.0.1:9900",
 			"type": "string"
 		},
 		{
@@ -716,6 +1138,26 @@
 			"key": "user_id",
 			"value": "",
 			"type": "string"
+		},
+		{
+			"key": "user_pass",
+			"value": ""
+		},
+		{
+			"key": "username",
+			"value": ""
+		},
+		{
+			"key": "password",
+			"value": ""
+		},
+		{
+			"key": "product_id",
+			"value": ""
+		},
+		{
+			"key": "order_id",
+			"value": ""
 		}
 	]
 }

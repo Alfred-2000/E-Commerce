@@ -2,7 +2,7 @@ import uuid
 
 from django.db import models
 
-from utilities import models as UtilitiesModels
+from utils import models as UtilitiesModels
 
 
 class SystemConfig(UtilitiesModels.CommonAttributes):

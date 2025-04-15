@@ -1,6 +1,7 @@
-from utilities import filtersets as UtilitiesFilters
-from shopping import models as ShoppingModels
+from utils import filtersets as UtilitiesFilters
+
 from shopping import constants as ShoppingConstants
+from shopping import models as ShoppingModels
 
 
 class ProductListingFilterSet(UtilitiesFilters.GenericModelFilterSet):

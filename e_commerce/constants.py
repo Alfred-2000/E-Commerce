@@ -10,6 +10,10 @@ JWT_SECRECT_KEY = "A@!b$#cd&10"
 
 USER_LOGGED_IN_SUCCESSFULLY = "User logged in successfully"
 
+USER_LOGGED_OUT_SUCCESSFULLY = "User logged out successfully"
+
+SESSION_NOT_FOUND = "User session not found"
+
 INVALID_CREDENTIALS = "Invalid credentials"
 
 UNAUTHORISED_ACCESS = "Unauthorised access"
@@ -57,6 +61,8 @@ ORDER_ADDED_SUCCESSFULLY = "Order added successfully"
 ORDER_UPDATED_SUCCESSFULLY = "Order updated successfully"
 
 ORDER_DELETED_SUCCESSFULLY = "Order deleted successfully"
+
+ORDERS_DELETED_SUCCESSFULLY = "Orders deleted successfully"
 
 ORDERS_LISTED_SUCCESSFULLY = "Order listed successfully"
 

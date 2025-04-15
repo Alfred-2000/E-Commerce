@@ -2,6 +2,7 @@ Django==3.1.4
 django-guardian==2.4.0
 djangorestframework-guardian==0.3.0
 djangorestframework==3.12.2
+django-filter==25.1
 psycopg2-binary==2.9.7
 redis==3.5.0
 PyJWT==2.8.0

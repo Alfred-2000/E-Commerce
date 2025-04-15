@@ -1,13 +1,11 @@
-import logging
 from collections import OrderedDict
-
-from django_filters import filters, filterset, Filter
-from e_commerce import constants as EcommerceConstants
+from typing import Any
 
 from django.db.models import QuerySet
-from typing import Any
-from utilities import constants as UtilitiesConstants
-from utilities import utils as Utilities
+from django_filters import Filter, filterset
+
+from utils import constants as UtilitiesConstants
+from utils import utils as Utilities
 
 
 class NotInFilter(Filter):

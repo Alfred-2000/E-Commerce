@@ -1,6 +1,6 @@
-from utilities import constants as UtilitiesConstants
 from django.db import models
-from functools import wraps
+
+from utils import constants as UtilitiesConstants
 
 
 def get_field_type(field_type: str) -> str:

@@ -1,34 +1,32 @@
 import uuid
-from datetime import datetime
 
-import pytz
-from django.contrib.auth import authenticate
-from django.contrib.auth.hashers import make_password
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model
 from django.db.models import Q
+from django_filters.rest_framework import DjangoFilterBackend
 from e_commerce import constants as EcommerceConstants
 from e_commerce import settings as EcommerceSettings
-from rest_framework import generics, mixins, viewsets, status, decorators
+from rest_framework import decorators, generics, status, viewsets
+from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.filters import SearchFilter
-from django_filters.rest_framework import DjangoFilterBackend
+from utils import dbops as DBOps
+from utils.classes import ErrorResponse, HttpMethod, SuccessResponse
+from utils.permissions import required_superuser_access
 
 from accounts import constants as AccountsConstants
 from accounts import utils as AccountsUtils
-from accounts.models import MyUser
+from accounts.models import MyUser, UserSession
 from accounts.serializers import UserSerializer
-from utilities.classes import SuccessResponse, ErrorResponse, HttpMethod
-from utilities.permissions import required_superuser_access
 
 
 class LoginView(APIView):
     def post(self, request):
         try:
+            user_name = request.data["username"]
+            password = request.data["password"]
             try:
                 user_object = MyUser.objects.get(
-                    Q(username=request.data["username"])
-                    | Q(email=request.data["username"])
+                    Q(username=user_name) | Q(email=user_name)
                 )
             except MyUser.DoesNotExist:
                 return Response(
@@ -36,37 +34,88 @@ class LoginView(APIView):
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
-            user = authenticate(
-                username=request.data["username"], password=request.data["password"]
-            )
-            if user is not None:
-                user_data = UserSerializer(user_object).data
-                redis_user_key = AccountsUtils.user_key_redis(user_data)
-                redis_user_data = AccountsUtils.get_redis_datas(
-                    redis_user_key, ["user_id", "username", "password", "email"]
-                )
-                user_details = (
-                    redis_user_data if redis_user_data.get("username") else user_data
-                )
-                admin_token_details = {
-                    "id": user_details.get("user_id"),
-                    "username": request.data["username"],
-                    "email": user_details.get("email"),
-                    "is_superuser": user_data["is_superuser"],
-                }
-                access_token = AccountsUtils.encode_decode_jwt_token(
-                    admin_token_details, convertion_type=EcommerceConstants.ENCODE
-                )
-                return Response(
-                    SuccessResponse(EcommerceConstants.USER_LOGGED_IN_SUCCESSFULLY),
-                    status=status.HTTP_200_OK,
-                    headers={"Authorization": access_token},
-                )
-            else:
+            user = authenticate(username=user_name, password=password)
+            if not user:
                 return Response(
                     ErrorResponse(EcommerceConstants.INVALID_CREDENTIALS),
                     status=status.HTTP_401_UNAUTHORIZED,
                 )
+
+            user_data = UserSerializer(user_object).data
+            redis_user_key = AccountsUtils.user_key_redis(user_data)
+            redis_user_data = AccountsUtils.get_redis_datas(
+                redis_user_key, ["user_id", "username", "password", "email"]
+            )
+            user_details = (
+                redis_user_data if redis_user_data.get("username") else user_data
+            )
+            session_id = str(uuid.uuid4())
+            (status_obj, _) = DBOps.create_record(
+                UserSession,
+                {
+                    "session_id": session_id,
+                    "user": user,
+                    "ip_address": request.META.get("REMOTE_ADDR"),
+                    "device": request.META.get("HTTP_USER_AGENT"),
+                    "is_active": True,
+                },
+            )
+            if not status_obj:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
+            admin_token_details = {
+                "user_id": user_details.get("user_id"),
+                "session_id": session_id,
+                "username": user_name,
+                "email": user_details.get("email"),
+                "is_superuser": user_data["is_superuser"],
+            }
+            access_token = AccountsUtils.encode_decode_jwt_token(
+                admin_token_details, convertion_type=EcommerceConstants.ENCODE
+            )
+            return Response(
+                SuccessResponse(
+                    EcommerceConstants.USER_LOGGED_IN_SUCCESSFULLY,
+                    data={"user_id": user_details.get("user_id")},
+                ),
+                status=status.HTTP_200_OK,
+                headers={"Authorization": access_token},
+            )
+
+        except Exception as error:
+            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
+
+
+class LogoutView(APIView):
+    authentication_classes = (AccountsUtils.CsrfExemptSessionAuthentication,)
+
+    def post(self, request):
+        try:
+            token = request.META.get("HTTP_AUTHORIZATION", None)
+            token_data = AccountsUtils.encode_decode_jwt_token(
+                token, convertion_type=EcommerceConstants.DECODE
+            )
+            user_id = token_data.get("user_id")
+            session_id = token_data.get("session_id")
+
+            (status_obj, session_obj) = DBOps.get_record(
+                UserSession,
+                {"session_id": session_id, "user_id": user_id, "is_active": True},
+            )
+
+            if not status_obj:
+                return Response(
+                    ErrorResponse(EcommerceConstants.SESSION_NOT_FOUND),
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            session_obj.is_active = False
+            session_obj.save(update_fields=["is_active"])
+
+            return Response(
+                SuccessResponse(EcommerceConstants.USER_LOGGED_OUT_SUCCESSFULLY),
+                status=status.HTTP_200_OK,
+            )
         except Exception as error:
             return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
 
@@ -105,13 +154,6 @@ class UserManagementViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     filterset_class = AccountsUtils.UsersListingFilterSet
     search_fields = AccountsConstants.USERS_SEARCH_AND_FILTER_FIELDS
-
-    # def get_queryset(self):
-    #     user = self.request.user
-    #     if user.is_superuser:
-    #         return self.queryset
-    #     else:
-    #         return self.queryset.exclude(is_superuser=True)
 
     @required_superuser_access
     def list(self, request, *args, **kwargs):

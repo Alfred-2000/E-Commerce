@@ -1,11 +1,11 @@
-from django.urls import re_path, include
+from django.urls import include, re_path
 from rest_framework import routers
 
 from accounts import views as AccountsViews
 
 router = routers.DefaultRouter()
 router.register(
-    r"users", AccountsViews.UserManagementViewSet, basename="user_management"
+    r"user", AccountsViews.UserManagementViewSet, basename="user_management"
 )
 
 urlpatterns = [
