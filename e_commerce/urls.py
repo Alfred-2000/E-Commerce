@@ -15,10 +15,12 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, re_path
+
 from accounts import views as AccountsViews
-from shopping import views as ShoppingViews
 
 urlpatterns = [
     re_path(r"^admin/", admin.site.urls),
@@ -26,4 +28,4 @@ urlpatterns = [
     re_path(r"^api/logout/", AccountsViews.LogoutView.as_view(), name="logout"),
     re_path(r"^api/account/", include("accounts.urls")),
     re_path(r"^api/shopping/", include("shopping.urls")),
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

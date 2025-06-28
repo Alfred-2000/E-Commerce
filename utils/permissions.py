@@ -40,7 +40,7 @@ def required_superuser_access(view_func):
 
 class IsSuperUserPermission(permissions.BasePermission):
     """
-    Custom permission to allow access only to superusers or the user who owns the object.
+    Custom permission to allow access only to superusers.
     """
 
     def has_permission(self, request, view):

@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import settings
 from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
 from rest_framework import status
@@ -19,6 +20,10 @@ class AuthenticationAuthorisationMiddleware(MiddlewareMixin):
 
     def __call__(self, request):
         try:
+            if request.path.startswith("/admin") or request.path.startswith(
+                settings.STATIC_URL
+            ):
+                return self.get_response(request)
             if not AccountsUtils.is_api_open(request):
                 try:
                     token = request.META.get("HTTP_AUTHORIZATION", None)
