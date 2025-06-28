@@ -10,6 +10,12 @@ router.register(
 router.register(
     r"order", ShoppingViews.OrderManagementViewSet, basename="order_management"
 )
+router.register(
+    r"cart", ShoppingViews.CartListManagementViewSet, basename="cart_management"
+)
+router.register(
+    r"wishlist", ShoppingViews.WishListManagementViewSet, basename="wishlist_management"
+)
 
 urlpatterns = [
     re_path(r"^", include(router.urls)),

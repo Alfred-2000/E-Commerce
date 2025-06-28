@@ -2,21 +2,26 @@ import uuid
 
 from django.contrib.auth import authenticate, get_user_model
 from django.db.models import Q
-from django_filters.rest_framework import DjangoFilterBackend
-from e_commerce import constants as EcommerceConstants
-from e_commerce import settings as EcommerceSettings
 from rest_framework import decorators, generics, status, viewsets
-from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from utils import dbops as DBOps
-from utils.classes import ErrorResponse, HttpMethod, SuccessResponse
-from utils.permissions import required_superuser_access
 
 from accounts import constants as AccountsConstants
+from accounts import models as AccountsModels
+from accounts import serializers as AccountsSerializer
 from accounts import utils as AccountsUtils
-from accounts.models import MyUser, UserSession
-from accounts.serializers import UserSerializer
+from e_commerce import constants as EcommerceConstants
+from e_commerce import settings as EcommerceSettings
+from utils import dbops as DBOps
+from utils.classes import (
+    ErrorResponse,
+    FilterSearchOrderingMixin,
+    HttpMethod,
+    SuccessResponse,
+)
+from utils.permissions import IsSuperUserPermission
+
+User = get_user_model()
 
 
 class LoginView(APIView):
@@ -25,10 +30,10 @@ class LoginView(APIView):
             user_name = request.data["username"]
             password = request.data["password"]
             try:
-                user_object = MyUser.objects.get(
+                user_object = AccountsModels.MyUser.objects.get(
                     Q(username=user_name) | Q(email=user_name)
                 )
-            except MyUser.DoesNotExist:
+            except AccountsModels.MyUser.DoesNotExist:
                 return Response(
                     ErrorResponse(EcommerceConstants.USER_DOSENT_EXISTS),
                     status=status.HTTP_404_NOT_FOUND,
@@ -41,7 +46,7 @@ class LoginView(APIView):
                     status=status.HTTP_401_UNAUTHORIZED,
                 )
 
-            user_data = UserSerializer(user_object).data
+            user_data = AccountsSerializer.UserSerializer(user_object).data
             redis_user_key = AccountsUtils.user_key_redis(user_data)
             redis_user_data = AccountsUtils.get_redis_datas(
                 redis_user_key, ["user_id", "username", "password", "email"]
@@ -51,7 +56,7 @@ class LoginView(APIView):
             )
             session_id = str(uuid.uuid4())
             (status_obj, _) = DBOps.create_record(
-                UserSession,
+                AccountsModels.UserSession,
                 {
                     "session_id": session_id,
                     "user": user,
@@ -99,7 +104,7 @@ class LogoutView(APIView):
             session_id = token_data.get("session_id")
 
             (status_obj, session_obj) = DBOps.get_record(
-                UserSession,
+                AccountsModels.UserSession,
                 {"session_id": session_id, "user_id": user_id, "is_active": True},
             )
 
@@ -121,20 +126,22 @@ class LogoutView(APIView):
 
 
 class RegisterUser(generics.CreateAPIView):
-    def post(self, request):
-        try:
-            user_details: dict = request.data
-            for field, message in AccountsConstants.USER_FIELD_VALIDATION.items():
-                if MyUser.objects.filter(**{field: user_details[field]}).exists():
-                    return Response(
-                        ErrorResponse(message), status=status.HTTP_400_BAD_REQUEST
-                    )
+    def validate_unique_fields(self, request_data: dict) -> None:
+        for field, message in AccountsConstants.USER_FIELD_VALIDATION.items():
+            if AccountsModels.MyUser.objects.filter(
+                **{field: request_data[field]}
+            ).exists():
+                raise ValueError(message)
 
-            User = get_user_model()
-            user_details.update({"user_id": uuid.uuid4()})
-            User.objects.create_user(**user_details)
-            user_query = MyUser.objects.get(username=user_details["username"])
-            serializer_data = UserSerializer(user_query).data
+    def post(self, request) -> Response:
+        try:
+            request_data: dict = request.data
+            self.validate_unique_fields(request_data)
+            User.objects.create_user(**request_data)
+            user_query = AccountsModels.MyUser.objects.get(
+                username=request_data["username"]
+            )
+            serializer_data = AccountsSerializer.UserSerializer(user_query).data
             AccountsUtils.set_user_info_to_redis(serializer_data)
             response_data = {"user_id": serializer_data["user_id"]}
             return Response(
@@ -143,28 +150,22 @@ class RegisterUser(generics.CreateAPIView):
                 ),
                 status=status.HTTP_201_CREATED,
             )
+        except ValueError as val_err:
+            return Response(
+                ErrorResponse(str(val_err)), status=status.HTTP_400_BAD_REQUEST
+            )
         except Exception as error:
             return Response(ErrorResponse(error), status.HTTP_400_BAD_REQUEST)
 
 
-class UserManagementViewSet(viewsets.ModelViewSet):
+class UserManagementViewSet(FilterSearchOrderingMixin, viewsets.ModelViewSet):
     authentication_classes = (AccountsUtils.CsrfExemptSessionAuthentication,)
-    filter_backends = [DjangoFilterBackend, SearchFilter]
-    queryset = MyUser.objects.order_by("-updated_at", "-created_at")
-    serializer_class = UserSerializer
+    permission_classes = [IsSuperUserPermission]
+    queryset = AccountsModels.MyUser.objects.order_by("-updated_at", "-created_at")
+    serializer_class = AccountsSerializer.UserSerializer
     filterset_class = AccountsUtils.UsersListingFilterSet
     search_fields = AccountsConstants.USERS_SEARCH_AND_FILTER_FIELDS
 
-    @required_superuser_access
-    def list(self, request, *args, **kwargs):
-        """
-        Override the list method to check for superuser access before retrieving a user.
-        If the logged-in user is a superuser, allow access to any user; otherwise, allow access
-        only to non-superusers.
-        """
-        return super().list(request, *args, **kwargs)
-
-    @required_superuser_access
     @decorators.action(
         detail=False,
         url_path="delete",
@@ -177,9 +178,11 @@ class UserManagementViewSet(viewsets.ModelViewSet):
         """
         try:
             deleted_users = []
-            users_list = MyUser.objects.filter(user_id__in=request.data["user_ids"])
+            users_list = AccountsModels.MyUser.objects.filter(
+                user_id__in=request.data["user_ids"]
+            )
             for user_object in users_list:
-                user_data = UserSerializer(user_object).data
+                user_data = AccountsSerializer.UserSerializer(user_object).data
                 deleted_users.append(user_data)
                 redis_user_key = AccountsUtils.user_key_redis(user_data)
                 user_object.delete()
@@ -190,3 +193,41 @@ class UserManagementViewSet(viewsets.ModelViewSet):
             )
         except Exception as error:
             return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserAddressViewset(viewsets.ModelViewSet):
+    authentication_classes = (AccountsUtils.CsrfExemptSessionAuthentication,)
+    permission_classes = [IsSuperUserPermission]
+    queryset = AccountsModels.Address.objects.order_by("-updated_at", "-created_at")
+    serializer_class = AccountsSerializer.AddressSerializer
+
+    def create(self, request, *args, **kwargs):
+        try:
+            request_data: dict = request.data
+            user_id = request_data["user"]
+            if request_data.get("is_default"):
+                AccountsModels.Address.objects.filter(user=user_id).update(
+                    is_default=False, updated_by=user_id
+                )
+            request_data["created_by"] = request.user.user_id
+            serializer = AccountsSerializer.AddressSerializer(data=request_data)
+            if not serializer.is_valid():
+                return Response(
+                    ErrorResponse(serializer.errors), status=status.HTTP_400_BAD_REQUEST
+                )
+
+            serializer.save()
+            return Response(
+                SuccessResponse(
+                    EcommerceConstants.USER_ADDRESS_CREATED_SUCCESSFULLY,
+                    data=serializer.data,
+                ),
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as error:
+            return Response(
+                ErrorResponse(str(error)), status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)

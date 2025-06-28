@@ -11,8 +11,6 @@ USERS_META_FIELDS = [
     "is_active",
     "phone_code",
     "phone_number",
-    "state",
-    "country",
 ]
 
 USER_FIELD_VALIDATION = {

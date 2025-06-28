@@ -1,0 +1,6 @@
+[flake8]
+max-line-length = 90
+ignore = E203,E501,F841,W503,F811
+per-file-ignores = 
+    */apps.py: F401
+    */migrations/*.py: E501,F401

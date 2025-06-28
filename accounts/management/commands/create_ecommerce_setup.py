@@ -1,11 +1,12 @@
 import logging
 import uuid
 
+from django.contrib.auth import get_user_model
+from django.core.management import BaseCommand
+
 from accounts import utils as AccountsUtils
 from accounts.models import MyUser
 from accounts.serializers import UserSerializer
-from django.contrib.auth import get_user_model
-from django.core.management import BaseCommand
 from e_commerce import constants as EcommerceConstants
 from e_commerce import settings as EcommerceSettings
 from system.models import SystemConfig
@@ -29,7 +30,6 @@ class Command(BaseCommand):
                 if not MyUser.objects.filter(
                     username=admin_user_details["username"]
                 ).exists():
-                    admin_user_details.update({"user_id": uuid.uuid4()})
                     User.objects.create_superuser(**admin_user_details)
                     user_query1 = MyUser.objects.get(
                         username=admin_user_details["username"]
@@ -56,7 +56,6 @@ class Command(BaseCommand):
                 if not MyUser.objects.filter(
                     username=debug_user_details["username"]
                 ).exists():
-                    debug_user_details.update({"user_id": uuid.uuid4()})
                     User.objects.create_superuser(**debug_user_details)
                     debug_user_details.update({"user_id": uuid.uuid4()})
                     user_query2 = MyUser.objects.get(

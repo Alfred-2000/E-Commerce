@@ -6,14 +6,14 @@ from typing import Union
 import jwt
 import pytz
 from django.urls import resolve
-from e_commerce import constants as EcommerceConstants
-from e_commerce import settings as EcommerceSettings
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.request import Request
-from utils import filtersets as UtilitiesFilters
 
 from accounts import constants as AccountsConstants
-from accounts.models import MyUser
+from accounts import models as AccountsModels
+from e_commerce import constants as EcommerceConstants
+from e_commerce import settings as EcommerceSettings
+from utils import filtersets as UtilitiesFilters
 
 
 def get_current_timestamp_of_timezone(time_zone: str) -> int:
@@ -134,7 +134,9 @@ def validate_jwt_token(token: str) -> bool:
             token, convertion_type=EcommerceConstants.DECODE
         )
         if user_details:
-            user_query = MyUser.objects.filter(user_id=user_details["user_id"])
+            user_query = AccountsModels.MyUser.objects.filter(
+                user_id=user_details["user_id"]
+            )
             token_status = True if user_query else False
         return token_status
     except Exception as error:
@@ -223,5 +225,5 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 
 class UsersListingFilterSet(UtilitiesFilters.GenericModelFilterSet):
     class Meta:
-        model = MyUser
+        model = AccountsModels.MyUser
         fields = AccountsConstants.USERS_SEARCH_AND_FILTER_FIELDS

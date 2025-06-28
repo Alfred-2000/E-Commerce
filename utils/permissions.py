@@ -1,5 +1,8 @@
 from functools import wraps
+
+from rest_framework import permissions
 from rest_framework.exceptions import PermissionDenied
+
 from accounts.utils import check_feature_permission
 
 
@@ -33,3 +36,17 @@ def required_superuser_access(view_func):
         return view_func(self, request, *args, **kwargs)
 
     return _wrapped_view
+
+
+class IsSuperUserPermission(permissions.BasePermission):
+    """
+    Custom permission to allow access only to superusers or the user who owns the object.
+    """
+
+    def has_permission(self, request, view):
+        if request.user and request.user.is_superuser:
+            return True
+
+    def has_object_permission(self, request, view, obj):
+        if request.user and request.user.is_superuser:
+            return True

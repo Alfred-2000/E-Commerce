@@ -1,15 +1,14 @@
 import logging
-import json
 
 from django.http import JsonResponse
-from e_commerce import constants as EcommerceConstants
-from rest_framework import status
 from django.utils.deprecation import MiddlewareMixin
+from rest_framework import status
 
 from accounts import utils as AccountsUtils
 from accounts.models import MyUser, UserSession
-from utils.classes import ErrorResponse
+from e_commerce import constants as EcommerceConstants
 from utils import dbops as DBOps
+from utils.classes import ErrorResponse
 
 
 class AuthenticationAuthorisationMiddleware(MiddlewareMixin):
@@ -67,13 +66,6 @@ class AuthenticationAuthorisationMiddleware(MiddlewareMixin):
                         )
 
                     request.user = user_query
-                    if request.content_type == "application/json":
-                        try:
-                            body_data = json.loads(request.body.decode("utf-8"))
-                            body_data["user_id"] = user_id
-                            request._body = json.dumps(body_data).encode("utf-8")
-                        except json.JSONDecodeError:
-                            pass
                     return self.get_response(request)
                 except Exception as er:
                     return JsonResponse(

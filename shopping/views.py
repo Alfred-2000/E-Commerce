@@ -1,20 +1,25 @@
-from accounts import utils as AccountsUtils
-from django_filters.rest_framework import DjangoFilterBackend
-from e_commerce import constants as EcommerceConstants
 from rest_framework import decorators, status, viewsets
-from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 
+from accounts import utils as AccountsUtils
+from e_commerce import constants as EcommerceConstants
 from shopping import constants as ShoppingConstants
 from shopping import models as ShoppingModels
 from shopping import serializers as ShoppingSerializer
 from shopping import utils as ShoppingUtils
-from utils.classes import ErrorResponse, HttpMethod, SuccessResponse
+from utils.classes import (
+    ErrorResponse,
+    FilterSearchOrderingMixin,
+    GetUserFromTokenMixin,
+    HttpMethod,
+    SuccessResponse,
+)
 
 
-class ProductManagementViewSet(viewsets.ModelViewSet):
+class ProductManagementViewSet(
+    GetUserFromTokenMixin, FilterSearchOrderingMixin, viewsets.ModelViewSet
+):
     authentication_classes = (AccountsUtils.CsrfExemptSessionAuthentication,)
-    filter_backends = [DjangoFilterBackend, SearchFilter]
     queryset = ShoppingModels.Product.objects.order_by("-updated_at", "-created_at")
     serializer_class = ShoppingSerializer.ProductSerializer
     filterset_class = ShoppingUtils.ProductListingFilterSet
@@ -36,9 +41,10 @@ class ProductManagementViewSet(viewsets.ModelViewSet):
             return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
 
 
-class OrderManagementViewSet(viewsets.ModelViewSet):
+class OrderManagementViewSet(
+    GetUserFromTokenMixin, FilterSearchOrderingMixin, viewsets.ModelViewSet
+):
     authentication_classes = (AccountsUtils.CsrfExemptSessionAuthentication,)
-    filter_backends = [DjangoFilterBackend, SearchFilter]
     queryset = ShoppingModels.Order.objects.order_by("-updated_at", "-created_at")
     serializer_class = ShoppingSerializer.OrderSerializer
 
@@ -67,3 +73,43 @@ class OrderManagementViewSet(viewsets.ModelViewSet):
             )
         except Exception as error:
             return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
+
+
+class CartListManagementViewSet(
+    GetUserFromTokenMixin, FilterSearchOrderingMixin, viewsets.ModelViewSet
+):
+    authentication_classes = (AccountsUtils.CsrfExemptSessionAuthentication,)
+    serializer_class = ShoppingSerializer.CartItemsSerializer
+
+    def get_queryset(self):
+        CartItems = ShoppingModels.CartItems
+        user_obj = self.request.user
+        if not user_obj:
+            return CartItems.objects.none()
+        return CartItems.objects.filter(user=user_obj).order_by(
+            "-updated_at", "-created_at"
+        )
+
+    @decorators.action(
+        detail=False,
+        url_path="delete",
+        methods=[HttpMethod.DELETE],
+    )
+    def delete_many(self, request, *args, **kwargs):
+        try:
+            queryset = self.get_queryset()
+            deleted_count, _ = queryset.delete()
+            return Response(
+                SuccessResponse(EcommerceConstants.CARTS_DELETED_SUCCESSFULLY),
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        except Exception as error:
+            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
+
+
+class WishListManagementViewSet(FilterSearchOrderingMixin, viewsets.ModelViewSet):
+    authentication_classes = (AccountsUtils.CsrfExemptSessionAuthentication,)
+    queryset = ShoppingModels.WishlistItems.objects.order_by(
+        "-updated_at", "-created_at"
+    )
+    serializer_class = ShoppingSerializer.WishlistItemsSerializer

@@ -1,4 +1,5 @@
 from django.db import models
+
 from e_commerce.constants import ORDER_STATUS
 from utils import models as UtilitiesModels
 
@@ -14,15 +15,29 @@ class Product(UtilitiesModels.CommonAttributes):
 
 class Order(UtilitiesModels.CommonAttributes):
     order_status = models.CharField(max_length=250, default=ORDER_STATUS[0])
-    product_id = models.ForeignKey("shopping.Product", on_delete=models.CASCADE)
+    product = models.ForeignKey("shopping.Product", on_delete=models.CASCADE)
     product_amount = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True
     )
-    user_id = models.ForeignKey("accounts.MyUser", on_delete=models.CASCADE)
+    user = models.ForeignKey("accounts.MyUser", on_delete=models.CASCADE)
     quantity = models.IntegerField(null=True, blank=True)
     order_amount = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True
     )
 
     def __int__(self):
-        return self.user_id
+        return self.user
+
+
+class CartItems(UtilitiesModels.CommonAttributes):
+    user = models.ForeignKey("accounts.MyUser", on_delete=models.CASCADE)
+    product = models.ForeignKey("shopping.Product", on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        unique_together = ("user", "product")
+
+
+class WishlistItems(UtilitiesModels.CommonAttributes):
+    user = models.ForeignKey("accounts.MyUser", on_delete=models.CASCADE)
+    product = models.ForeignKey("shopping.Product", on_delete=models.CASCADE)
