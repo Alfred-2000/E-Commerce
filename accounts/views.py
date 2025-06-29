@@ -25,7 +25,7 @@ User = get_user_model()
 
 
 class LoginView(APIView):
-    def post(self, request):
+    def post(self, request) -> Response:
         try:
             user_name = request.data["username"]
             password = request.data["password"]
@@ -34,15 +34,15 @@ class LoginView(APIView):
                     Q(username=user_name) | Q(email=user_name)
                 )
             except AccountsModels.MyUser.DoesNotExist:
-                return Response(
-                    ErrorResponse(EcommerceConstants.USER_DOSENT_EXISTS),
+                return ErrorResponse(
+                    error=EcommerceConstants.USER_DOSENT_EXISTS,
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
             user = authenticate(username=user_name, password=password)
             if not user:
-                return Response(
-                    ErrorResponse(EcommerceConstants.INVALID_CREDENTIALS),
+                return ErrorResponse(
+                    error=EcommerceConstants.INVALID_CREDENTIALS,
                     status=status.HTTP_401_UNAUTHORIZED,
                 )
 
@@ -66,7 +66,7 @@ class LoginView(APIView):
                 },
             )
             if not status_obj:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+                return ErrorResponse(status=status.HTTP_400_BAD_REQUEST)
 
             admin_token_details = {
                 "user_id": user_details.get("user_id"),
@@ -78,23 +78,20 @@ class LoginView(APIView):
             access_token = AccountsUtils.encode_decode_jwt_token(
                 admin_token_details, convertion_type=EcommerceConstants.ENCODE
             )
-            return Response(
-                SuccessResponse(
-                    EcommerceConstants.USER_LOGGED_IN_SUCCESSFULLY,
-                    data={"user_id": user_details.get("user_id")},
-                ),
+            return SuccessResponse(
+                msg=EcommerceConstants.USER_LOGGED_IN_SUCCESSFULLY,
+                data={"user_id": user_details.get("user_id")},
                 status=status.HTTP_200_OK,
                 headers={"Authorization": access_token},
             )
-
         except Exception as error:
-            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
+            return ErrorResponse(error=str(error), status=status.HTTP_400_BAD_REQUEST)
 
 
 class LogoutView(APIView):
     authentication_classes = (AccountsUtils.CsrfExemptSessionAuthentication,)
 
-    def post(self, request):
+    def post(self, request) -> Response:
         try:
             token = request.META.get("HTTP_AUTHORIZATION", None)
             token_data = AccountsUtils.encode_decode_jwt_token(
@@ -109,20 +106,20 @@ class LogoutView(APIView):
             )
 
             if not status_obj:
-                return Response(
-                    ErrorResponse(EcommerceConstants.SESSION_NOT_FOUND),
+                return ErrorResponse(
+                    error=EcommerceConstants.SESSION_NOT_FOUND,
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
             session_obj.is_active = False
             session_obj.save(update_fields=["is_active"])
 
-            return Response(
-                SuccessResponse(EcommerceConstants.USER_LOGGED_OUT_SUCCESSFULLY),
+            return SuccessResponse(
+                msg=EcommerceConstants.USER_LOGGED_OUT_SUCCESSFULLY,
                 status=status.HTTP_200_OK,
             )
         except Exception as error:
-            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
+            return ErrorResponse(error=str(error), status=status.HTTP_400_BAD_REQUEST)
 
 
 class RegisterUser(generics.CreateAPIView):
@@ -144,23 +141,20 @@ class RegisterUser(generics.CreateAPIView):
             serializer_data = AccountsSerializer.UserSerializer(user_query).data
             AccountsUtils.set_user_info_to_redis(serializer_data)
             response_data = {"user_id": serializer_data["user_id"]}
-            return Response(
-                SuccessResponse(
-                    EcommerceConstants.USER_REGISTERED_SUCCESSFULLY, data=response_data
-                ),
+            return SuccessResponse(
+                msg=EcommerceConstants.USER_REGISTERED_SUCCESSFULLY,
+                data=response_data,
                 status=status.HTTP_201_CREATED,
             )
         except ValueError as val_err:
-            return Response(
-                ErrorResponse(str(val_err)), status=status.HTTP_400_BAD_REQUEST
-            )
+            return ErrorResponse(error=str(val_err), status=status.HTTP_400_BAD_REQUEST)
         except Exception as error:
-            return Response(ErrorResponse(error), status.HTTP_400_BAD_REQUEST)
+            return ErrorResponse(error=str(error), status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserManagementViewSet(FilterSearchOrderingMixin, viewsets.ModelViewSet):
     authentication_classes = (AccountsUtils.CsrfExemptSessionAuthentication,)
-    permission_classes = [IsSuperUserPermission]
+    permission_classes = [IsObjectOwnerOrSuperUserPermission]
     queryset = AccountsModels.MyUser.objects.order_by("-updated_at", "-created_at")
     serializer_class = AccountsSerializer.UserSerializer
     filterset_class = AccountsUtils.UsersListingFilterSet
@@ -170,8 +164,9 @@ class UserManagementViewSet(FilterSearchOrderingMixin, viewsets.ModelViewSet):
         detail=False,
         url_path="delete",
         methods=[HttpMethod.DELETE],
+        permission_classes=[IsSuperUserPermission],
     )
-    def delete_many(self, request):
+    def delete_many(self, request) -> Response:
         """
         Override the destroy method to check for superuser access before deleting a user.
         Superusers can delete any user, while non-superusers can only delete their own user.
@@ -187,12 +182,12 @@ class UserManagementViewSet(FilterSearchOrderingMixin, viewsets.ModelViewSet):
                 redis_user_key = AccountsUtils.user_key_redis(user_data)
                 user_object.delete()
                 EcommerceSettings.REDIS_CONNECTION_WRITE.delete(redis_user_key)
-            return Response(
-                SuccessResponse(EcommerceConstants.USER_DELETED_SUCCESSFULLY),
+            return SuccessResponse(
+                msg=EcommerceConstants.USER_DELETED_SUCCESSFULLY,
                 status=status.HTTP_204_NO_CONTENT,
             )
         except Exception as error:
-            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
+            return ErrorResponse(error=str(error), status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserAddressViewset(viewsets.ModelViewSet):
@@ -211,7 +206,7 @@ class UserAddressViewset(viewsets.ModelViewSet):
             queryset = self.queryset.filter(user=self.request.user)
         return queryset
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs) -> Response:
         try:
             request_data: dict = request.data
             user_id = request_data["user"]
@@ -222,24 +217,20 @@ class UserAddressViewset(viewsets.ModelViewSet):
             request_data["created_by"] = request.user.user_id
             serializer = AccountsSerializer.AddressSerializer(data=request_data)
             if not serializer.is_valid():
-                return Response(
-                    ErrorResponse(serializer.errors), status=status.HTTP_400_BAD_REQUEST
+                return ErrorResponse(
+                    serializer.errors, status=status.HTTP_400_BAD_REQUEST
                 )
 
             serializer.save()
-            return Response(
-                SuccessResponse(
-                    EcommerceConstants.ADDRESS_CREATED_SUCCESSFULLY,
-                    data=serializer.data,
-                ),
+            return SuccessResponse(
+                msg=EcommerceConstants.ADDRESS_CREATED_SUCCESSFULLY,
+                data=serializer.data,
                 status=status.HTTP_201_CREATED,
             )
         except Exception as error:
-            return Response(
-                ErrorResponse(str(error)), status=status.HTTP_400_BAD_REQUEST
-            )
+            return ErrorResponse(error=str(error), status=status.HTTP_400_BAD_REQUEST)
 
-    def update(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs) -> Response:
         try:
             instance = self.get_object()
             request_data: dict = request.data
@@ -253,34 +244,26 @@ class UserAddressViewset(viewsets.ModelViewSet):
                 instance, data=request_data, partial=True
             )
             if not serializer.is_valid():
-                return Response(
-                    ErrorResponse(serializer.errors), status=status.HTTP_400_BAD_REQUEST
+                return ErrorResponse(
+                    error=serializer.errors, status=status.HTTP_400_BAD_REQUEST
                 )
 
             serializer.save()
-            return Response(
-                SuccessResponse(
-                    EcommerceConstants.ADDRESS_UPDATED_SUCCESSFULLY,
-                    data=serializer.data,
-                ),
+            return SuccessResponse(
+                msg=EcommerceConstants.ADDRESS_UPDATED_SUCCESSFULLY,
+                data=serializer.data,
                 status=status.HTTP_201_CREATED,
             )
         except Exception as error:
-            return Response(
-                ErrorResponse(str(error)), status=status.HTTP_400_BAD_REQUEST
-            )
+            return ErrorResponse(error=str(error), status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self, request, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs) -> Response:
         try:
             address = self.get_object()
             address.delete()
-            return Response(
-                SuccessResponse(
-                    EcommerceConstants.ADDRESS_DELETED_SUCCESSFULLY,
-                ),
+            return SuccessResponse(
+                msg=EcommerceConstants.ADDRESS_DELETED_SUCCESSFULLY,
                 status=status.HTTP_200_OK,
             )
         except Exception as error:
-            return Response(
-                ErrorResponse(str(error)), status=status.HTTP_400_BAD_REQUEST
-            )
+            return ErrorResponse(error=str(error), status=status.HTTP_400_BAD_REQUEST)

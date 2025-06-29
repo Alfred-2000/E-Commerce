@@ -47,6 +47,16 @@ class IsSuperUserPermission(permissions.BasePermission):
         if request.user and request.user.is_superuser:
             return True
 
+    def has_object_permission(self, request, view, obj):
+        obj_perm_status = False
+        if request.user and request.user.is_superuser:
+            obj_perm_status = True
+
+        if getattr(obj, "user_id", None) == request.user.user_id:
+            obj_perm_status = True
+
+        return obj_perm_status
+
 
 class IsObjectOwnerOrSuperUserPermission(permissions.BasePermission):
     """

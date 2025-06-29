@@ -1,14 +1,17 @@
 import enum
 
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, serializers
+from rest_framework import filters, serializers, status
+from rest_framework.response import Response
 
 from accounts import utils as AccountsUtils
 from e_commerce import constants as EcommerceConstants
 
 
 class ResponseMessages:
-    def success_response(self, msg: str, data: dict = None) -> dict:
+    def success_response(
+        self, msg: str, data: dict = None, status: status = None, headers: dict = None
+    ) -> dict:
         """
         Function returns a success response with a custom message.
 
@@ -22,9 +25,11 @@ class ResponseMessages:
         response = {"message": msg}
         if data:
             response.update(data)
-        return response
+        if headers:
+            return Response(response, status=status, headers=headers)
+        return Response(response, status=status)
 
-    def error_response(self, error: str) -> dict:
+    def error_response(self, error: str = None, status: status = None) -> dict:
         """
         Function returns an error response with a custom error message.
 
@@ -34,8 +39,10 @@ class ResponseMessages:
         Returns:
             response : A dictionary containing the error message.
         """
-        response = {"error": error}
-        return response
+        response = {}
+        if error:
+            response.update({"error": error})
+        return Response(response, status=status)
 
 
 responseMessage = ResponseMessages()

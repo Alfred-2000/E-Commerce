@@ -30,15 +30,15 @@ class ProductManagementViewSet(
         url_path="delete",
         methods=[HttpMethod.DELETE],
     )
-    def delete_many(self, request, *args, **kwargs):
+    def delete_many(self, request, *args, **kwargs) -> Response:
         try:
             self.queryset.filter(id__in=request.data["ids"]).delete()
-            return Response(
-                SuccessResponse(EcommerceConstants.PRODUCTS_DELETED_SUCCESSFULLY),
+            return SuccessResponse(
+                msg=EcommerceConstants.PRODUCTS_DELETED_SUCCESSFULLY,
                 status=status.HTTP_204_NO_CONTENT,
             )
         except Exception as error:
-            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
+            return ErrorResponse(error=str(error), status=status.HTTP_400_BAD_REQUEST)
 
 
 class OrderManagementViewSet(
@@ -48,7 +48,7 @@ class OrderManagementViewSet(
     queryset = ShoppingModels.Order.objects.order_by("-updated_at", "-created_at")
     serializer_class = ShoppingSerializer.OrderSerializer
 
-    def update(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs) -> Response:
         try:
             request_status = request.data.get("order_status")
             if request_status:
@@ -57,22 +57,22 @@ class OrderManagementViewSet(
                 ]
             return super().update(request, *args, **kwargs)
         except Exception as error:
-            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
+            return ErrorResponse(error=str(error), status=status.HTTP_400_BAD_REQUEST)
 
     @decorators.action(
         detail=False,
         url_path="delete",
         methods=[HttpMethod.DELETE],
     )
-    def delete_many(self, request, *args, **kwargs):
+    def delete_many(self, request, *args, **kwargs) -> Response:
         try:
             self.queryset.filter(id__in=request.data["ids"]).delete()
-            return Response(
-                SuccessResponse(EcommerceConstants.ORDERS_DELETED_SUCCESSFULLY),
+            return SuccessResponse(
+                msg=EcommerceConstants.ORDERS_DELETED_SUCCESSFULLY,
                 status=status.HTTP_204_NO_CONTENT,
             )
         except Exception as error:
-            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
+            return ErrorResponse(error=str(error), status=status.HTTP_400_BAD_REQUEST)
 
 
 class CartListManagementViewSet(
@@ -95,16 +95,16 @@ class CartListManagementViewSet(
         url_path="delete",
         methods=[HttpMethod.DELETE],
     )
-    def delete_many(self, request, *args, **kwargs):
+    def delete_many(self, request, *args, **kwargs) -> Response:
         try:
             queryset = self.get_queryset()
             deleted_count, _ = queryset.delete()
-            return Response(
-                SuccessResponse(EcommerceConstants.CARTS_DELETED_SUCCESSFULLY),
+            return SuccessResponse(
+                msg=EcommerceConstants.CARTS_DELETED_SUCCESSFULLY,
                 status=status.HTTP_204_NO_CONTENT,
             )
         except Exception as error:
-            return Response(ErrorResponse(error), status=status.HTTP_400_BAD_REQUEST)
+            return ErrorResponse(error=str(error), status=status.HTTP_400_BAD_REQUEST)
 
 
 class WishListManagementViewSet(FilterSearchOrderingMixin, viewsets.ModelViewSet):
