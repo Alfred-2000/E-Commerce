@@ -14,4 +14,4 @@ class SystemConfig(UtilitiesModels.CommonAttributes):
     smtp_password = models.CharField(max_length=100)
 
     def __str__(self):
-        return self.system_id
+        return f"{self.system_id} - {self.system_name}"

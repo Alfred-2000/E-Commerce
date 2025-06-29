@@ -38,11 +38,11 @@ USER_ALREADY_EXISTS = "User already exists"
 
 USER_UPDATED_SUCCESSFULLY = "User updated successfully"
 
-USER_ADDRESS_DELETED_SUCCESSFULLY = "User address deleted successfully"
+ADDRESS_DELETED_SUCCESSFULLY = "Address deleted successfully"
 
-USER_ADDRESS_CREATED_SUCCESSFULLY = "User address created successfully"
+ADDRESS_CREATED_SUCCESSFULLY = "Address created successfully"
 
-USER_ADDRESS_UPDATED_SUCCESSFULLY = "User address updated successfully"
+ADDRESS_UPDATED_SUCCESSFULLY = "Address updated successfully"
 
 PRODUCT_DETAILS_LISTED_SUCCESSFULLY = "Product details listed successfully"
 

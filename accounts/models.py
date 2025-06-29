@@ -23,6 +23,9 @@ class Address(UtilitiesModels.CommonAttributes):
     postal_code = models.CharField(max_length=20)
     is_default = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f"{self.user.username} - {self.address}"
+
 
 class UserSession(models.Model):
     session_id = models.UUIDField(primary_key=True, editable=False)

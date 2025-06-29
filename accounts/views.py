@@ -19,7 +19,7 @@ from utils.classes import (
     HttpMethod,
     SuccessResponse,
 )
-from utils.permissions import IsSuperUserPermission
+from utils.permissions import IsObjectOwnerOrSuperUserPermission, IsSuperUserPermission
 
 User = get_user_model()
 
@@ -197,9 +197,19 @@ class UserManagementViewSet(FilterSearchOrderingMixin, viewsets.ModelViewSet):
 
 class UserAddressViewset(viewsets.ModelViewSet):
     authentication_classes = (AccountsUtils.CsrfExemptSessionAuthentication,)
-    permission_classes = [IsSuperUserPermission]
-    queryset = AccountsModels.Address.objects.order_by("-updated_at", "-created_at")
+    permission_classes = [IsObjectOwnerOrSuperUserPermission]
     serializer_class = AccountsSerializer.AddressSerializer
+    queryset = AccountsModels.Address.objects.order_by("-updated_at", "-created_at")
+
+    def get_queryset(self):
+        user_obj = self.request.user
+        if not user_obj:
+            queryset = self.queryset.none()
+        elif user_obj.is_superuser:
+            queryset = self.queryset
+        else:
+            queryset = self.queryset.filter(user=self.request.user)
+        return queryset
 
     def create(self, request, *args, **kwargs):
         try:
@@ -219,7 +229,7 @@ class UserAddressViewset(viewsets.ModelViewSet):
             serializer.save()
             return Response(
                 SuccessResponse(
-                    EcommerceConstants.USER_ADDRESS_CREATED_SUCCESSFULLY,
+                    EcommerceConstants.ADDRESS_CREATED_SUCCESSFULLY,
                     data=serializer.data,
                 ),
                 status=status.HTTP_201_CREATED,
@@ -229,5 +239,48 @@ class UserAddressViewset(viewsets.ModelViewSet):
                 ErrorResponse(str(error)), status=status.HTTP_400_BAD_REQUEST
             )
 
-    def retrieve(self, request, *args, **kwargs):
-        return super().retrieve(request, *args, **kwargs)
+    def update(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            request_data: dict = request.data
+            user_id = request_data["user"]
+            if request_data.get("is_default"):
+                AccountsModels.Address.objects.filter(user=user_id).update(
+                    is_default=False, updated_by=user_id
+                )
+            request_data["updated_by"] = request.user.user_id
+            serializer = AccountsSerializer.AddressSerializer(
+                instance, data=request_data, partial=True
+            )
+            if not serializer.is_valid():
+                return Response(
+                    ErrorResponse(serializer.errors), status=status.HTTP_400_BAD_REQUEST
+                )
+
+            serializer.save()
+            return Response(
+                SuccessResponse(
+                    EcommerceConstants.ADDRESS_UPDATED_SUCCESSFULLY,
+                    data=serializer.data,
+                ),
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as error:
+            return Response(
+                ErrorResponse(str(error)), status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            address = self.get_object()
+            address.delete()
+            return Response(
+                SuccessResponse(
+                    EcommerceConstants.ADDRESS_DELETED_SUCCESSFULLY,
+                ),
+                status=status.HTTP_200_OK,
+            )
+        except Exception as error:
+            return Response(
+                ErrorResponse(str(error)), status=status.HTTP_400_BAD_REQUEST
+            )
