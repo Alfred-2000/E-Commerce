@@ -37,7 +37,7 @@ python manage.py startapp shopping
 
 
 ---------------------------------------------------------------------------------
-for x in accounts shopping system; do rm -rf $x/migrations; mkdir $x/migrations; touch $x/migrations/__init__.py; done
+for x in accounts payments shopping system; do rm -rf $x/migrations; mkdir $x/migrations; touch $x/migrations/__init__.py; done
 
 python manage.py makemigrations
 

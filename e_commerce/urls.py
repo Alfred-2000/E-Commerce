@@ -28,4 +28,7 @@ urlpatterns = [
     re_path(r"^api/logout/", AccountsViews.LogoutView.as_view(), name="logout"),
     re_path(r"^api/account/", include("accounts.urls")),
     re_path(r"^api/shopping/", include("shopping.urls")),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+]
+
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

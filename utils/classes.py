@@ -1,5 +1,6 @@
 import enum
 
+from django.http import JsonResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, serializers, status
 from rest_framework.response import Response
@@ -44,10 +45,21 @@ class ResponseMessages:
             response.update({"error": error})
         return Response(response, status=status)
 
+    def json_response(
+        self, data: dict = None, error: str = None, status: status = None
+    ):
+        response = {}
+        if data:
+            response.update({"data": data})
+        if error:
+            response.update({"error": error})
+        return JsonResponse(response, status=status)
+
 
 responseMessage = ResponseMessages()
 SuccessResponse = responseMessage.success_response
 ErrorResponse = responseMessage.error_response
+JSONResponse = responseMessage.json_response
 
 
 class StrEnum(str, enum.Enum):

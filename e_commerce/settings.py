@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-wo8t_o(i^4bfackftj+z9%m+np=l2*c_+93th18*-7oa-dgg4g"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "accounts",
+    "payments",
     "shopping",
     "system",
 ]
@@ -71,13 +72,17 @@ ROOT_URLCONF = "e_commerce.urls"
 OPEN_API = {
     "login": 1,
     "account_register": 1,
+    "product_management-list": 1,
+    "product-list": 1,
 }
 
 MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [

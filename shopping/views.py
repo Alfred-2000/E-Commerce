@@ -1,3 +1,4 @@
+from django.shortcuts import render
 from rest_framework import decorators, status, viewsets
 from rest_framework.response import Response
 
@@ -14,6 +15,11 @@ from utils.classes import (
     HttpMethod,
     SuccessResponse,
 )
+
+
+def product_list_view(request):
+    products = ShoppingModels.Product.objects.prefetch_related("product_images").all()
+    return render(request, "shopping/products_list.html", {"products": products})
 
 
 class ProductManagementViewSet(
