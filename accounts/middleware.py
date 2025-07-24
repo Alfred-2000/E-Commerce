@@ -15,11 +15,8 @@ class AuthenticationAuthorisationMiddleware(MiddlewareMixin):
 
     def process_request(self, request):
         try:
-            if (
-                request.path.startswith(
-                    ("/admin", settings.STATIC_URL, settings.MEDIA_URL)
-                )
-                or request.path == "/favicon.ico"
+            if request.path.startswith(
+                ("/admin", settings.STATIC_URL, settings.MEDIA_URL)
             ):
                 return None
 

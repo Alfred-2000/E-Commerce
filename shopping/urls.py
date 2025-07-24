@@ -1,4 +1,4 @@
-from django.urls import include, path, re_path
+from django.urls import include, re_path
 from rest_framework import routers
 
 from shopping import views as ShoppingViews
@@ -20,5 +20,4 @@ router.register(
 
 urlpatterns = [
     re_path(r"^", include(router.urls)),
-    path("products/", ShoppingViews.product_list_view, name="product-list"),
 ]
